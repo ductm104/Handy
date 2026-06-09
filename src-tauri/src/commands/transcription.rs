@@ -136,7 +136,7 @@ pub async fn transcribe_file(
     let text = processed.final_text;
 
     let history_entry = {
-        let file_name = format!("handy-file-{}.wav", chrono::Utc::now().timestamp_millis());
+        let file_name = format!("hanhcute-file-{}.wav", chrono::Utc::now().timestamp_millis());
         let wav_path = history_manager.recordings_dir().join(&file_name);
         let sample_count = samples_for_history.len();
         let save_result = tauri::async_runtime::spawn_blocking(move || {

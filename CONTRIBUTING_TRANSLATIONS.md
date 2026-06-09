@@ -1,6 +1,6 @@
-# Contributing Translations to Handy
+# Contributing Translations to HanhCute
 
-Thank you for helping translate Handy! This guide explains how to add or improve translations.
+Thank you for helping translate HanhCute! This guide explains how to add or improve translations.
 
 ## Quick Start
 
