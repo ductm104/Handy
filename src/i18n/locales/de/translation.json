@@ -1,7 +1,6 @@
 {
   "tray": {
     "settings": "Einstellungen...",
-    "checkUpdates": "Nach Updates suchen...",
     "copyLastTranscript": "Letzte Transkription kopieren",
     "unloadModel": "Modell entladen",
     "model": "Modell",
@@ -456,10 +455,6 @@
         "title": "Log-Level",
         "description": "Ausführlichkeit der Protokollierung festlegen"
       },
-      "updateChecks": {
-        "label": "Nach Updates suchen",
-        "description": "Automatisch nach neuen Versionen von Handy suchen"
-      },
       "soundTheme": {
         "label": "Sound-Thema",
         "description": "Sound-Thema für Aufnahme-Start und -Stop-Feedback auswählen"
@@ -554,20 +549,8 @@
   },
   "footer": {
     "downloadingModel": "Lade {{model}} herunter...",
-    "checkingUpdates": "Suche nach Updates...",
-    "updateAvailable": "Update verfügbar: {{version}}",
-    "updateAvailableShort": "Update verfügbar",
-    "upToDate": "Aktuell",
-    "downloadUpdate": "Update herunterladen",
     "restart": "Neustart",
-    "updateCheckingDisabled": "Update-Prüfung deaktiviert",
-    "downloading": "Wird heruntergeladen... {{progress}}%",
-    "installing": "Wird installiert...",
-    "preparing": "Wird vorbereitet...",
-    "checkForUpdates": "Nach Updates suchen",
-    "portableUpdateTitle": "Manuelles Update erforderlich",
-    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, saved audio) from the old version to the new one.",
-    "portableUpdateButton": "GitHub Releases öffnen"
+    "downloading": "Wird heruntergeladen... {{progress}}%"
   },
   "common": {
     "loading": "Wird geladen...",

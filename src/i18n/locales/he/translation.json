@@ -1,7 +1,6 @@
 {
   "tray": {
     "settings": "הגדרות...",
-    "checkUpdates": "בדוק עדכונים...",
     "copyLastTranscript": "העתק את התמלול האחרון",
     "unloadModel": "פרוק מודל",
     "model": "מודל",
@@ -456,10 +455,6 @@
         "title": "רמת לוג",
         "description": "הגדר את רמת הפירוט של הלוגים"
       },
-      "updateChecks": {
-        "label": "בדוק עדכונים",
-        "description": "בדוק אוטומטית אם קיימות גרסאות חדשות של Handy"
-      },
       "soundTheme": {
         "label": "ערכת צלילים",
         "description": "בחר ערכת צלילים להתחלה ולסיום ההקלטה"
@@ -554,20 +549,8 @@
   },
   "footer": {
     "downloadingModel": "מוריד את {{model}}...",
-    "checkingUpdates": "בודק עדכונים...",
-    "updateAvailable": "יש עדכון זמין: {{version}}",
-    "updateAvailableShort": "יש עדכון זמין",
-    "upToDate": "מעודכן",
-    "downloadUpdate": "הורד עדכון",
     "restart": "הפעל מחדש",
-    "updateCheckingDisabled": "בדיקת העדכונים כבויה",
-    "downloading": "מוריד... {{progress}}%",
-    "installing": "מתקין...",
-    "preparing": "מכין...",
-    "checkForUpdates": "בדוק עדכונים",
-    "portableUpdateTitle": "נדרש עדכון ידני",
-    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, saved audio) from the old version to the new one.",
-    "portableUpdateButton": "פתח את GitHub Releases"
+    "downloading": "מוריד... {{progress}}%"
   },
   "common": {
     "loading": "טוען...",

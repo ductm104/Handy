@@ -1,7 +1,6 @@
 {
   "tray": {
     "settings": "Налаштування...",
-    "checkUpdates": "Перевірити оновлення...",
     "copyLastTranscript": "Скопіювати останню транскрипцію",
     "unloadModel": "Вивантажити модель",
     "model": "Модель",
@@ -456,10 +455,6 @@
         "title": "Рівень логування",
         "description": "Встановіть детальність логування"
       },
-      "updateChecks": {
-        "label": "Перевірка оновлень",
-        "description": "Автоматично перевіряти наявність нових версій Handy"
-      },
       "soundTheme": {
         "label": "Звукова тема",
         "description": "Оберіть звукову тему для сповіщень про початок і зупинку запису"
@@ -554,20 +549,8 @@
   },
   "footer": {
     "downloadingModel": "Завантаження {{model}}...",
-    "checkingUpdates": "Перевірка оновлень...",
-    "updateAvailable": "Доступне оновлення: {{version}}",
-    "updateAvailableShort": "Доступне оновлення",
-    "upToDate": "Актуальна версія",
-    "downloadUpdate": "Завантажити оновлення",
     "restart": "Перезапустити",
-    "updateCheckingDisabled": "Перевірка оновлень вимкнена",
-    "downloading": "Завантаження... {{progress}}%",
-    "installing": "Встановлення...",
-    "preparing": "Підготовка...",
-    "checkForUpdates": "Перевірити оновлення",
-    "portableUpdateTitle": "Manual update required",
-    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, saved audio) from the old version to the new one.",
-    "portableUpdateButton": "Open GitHub Releases"
+    "downloading": "Завантаження... {{progress}}%"
   },
   "common": {
     "loading": "Завантаження...",

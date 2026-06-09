@@ -1,7 +1,6 @@
 {
   "tray": {
     "settings": "Настройки...",
-    "checkUpdates": "Проверка за актуализации...",
     "copyLastTranscript": "Копиране на последния транскрипт",
     "unloadModel": "Разтоварване на модела",
     "model": "Модел",
@@ -456,10 +455,6 @@
         "title": "Ниво на логване",
         "description": "Задаване на подробността на логовете"
       },
-      "updateChecks": {
-        "label": "Проверка за актуализации",
-        "description": "Автоматична проверка за нови версии на Handy"
-      },
       "soundTheme": {
         "label": "Звукова тема",
         "description": "Избор на звукова тема за сигнал при старт и край на записа"
@@ -554,20 +549,8 @@
   },
   "footer": {
     "downloadingModel": "Изтегляне на {{model}}...",
-    "checkingUpdates": "Проверка за актуализации...",
-    "updateAvailable": "Налична актуализация: {{version}}",
-    "updateAvailableShort": "Налична актуализация",
-    "upToDate": "Актуална версия",
-    "downloadUpdate": "Изтегляне на актуализацията",
     "restart": "Рестартиране",
-    "updateCheckingDisabled": "Проверката за актуализации е изключена",
-    "downloading": "Изтегля се... {{progress}}%",
-    "installing": "Инсталиране...",
-    "preparing": "Подготовка...",
-    "checkForUpdates": "Проверка за актуализации",
-    "portableUpdateTitle": "Необходима е ръчна актуализация",
-    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, saved audio) from the old version to the new one.",
-    "portableUpdateButton": "Отвори GitHub Releases"
+    "downloading": "Изтегля се... {{progress}}%"
   },
   "common": {
     "loading": "Зареждане...",
