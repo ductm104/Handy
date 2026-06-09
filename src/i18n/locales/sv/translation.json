@@ -170,7 +170,7 @@
     "general": {
       "title": "Allmänt",
       "shortcut": {
-        "title": "Handy-kortkommandon",
+        "title": "HanhCute-kortkommandon",
         "description": "Konfigurera kortkommandon för att starta tal-till-text-inspelning",
         "loading": "Laddar kortkommandon...",
         "none": "Inga kortkommandon konfigurerade",
@@ -288,11 +288,11 @@
       },
       "autostart": {
         "label": "Starta vid uppstart",
-        "description": "Starta Handy automatiskt när du loggar in på din dator."
+        "description": "Starta HanhCute automatiskt när du loggar in på din dator."
       },
       "showTrayIcon": {
         "label": "Visa ikon i systemfältet",
-        "description": "Visa Handy-ikonen i systemfältet."
+        "description": "Visa HanhCute-ikonen i systemfältet."
       },
       "overlay": {
         "title": "Överlagringsposition",
@@ -521,11 +521,11 @@
       "title": "Om",
       "version": {
         "title": "Version",
-        "description": "Nuvarande version av Handy"
+        "description": "Nuvarande version av HanhCute"
       },
       "appDataDirectory": {
         "title": "Mapp för appdata",
-        "description": "Plats där Handy lagrar sina data"
+        "description": "Plats där HanhCute lagrar sina data"
       },
       "sourceCode": {
         "title": "Källkod",
@@ -534,7 +534,7 @@
       },
       "supportDevelopment": {
         "title": "Stöd utvecklingen",
-        "description": "Hjälp oss att fortsätta bygga Handy",
+        "description": "Hjälp oss att fortsätta bygga HanhCute",
         "button": "Donera"
       },
       "acknowledgments": {
@@ -542,7 +542,7 @@
         "whisper": {
           "title": "Whisper.cpp",
           "description": "Högpresterande inferens av OpenAI:s Whisper-modell för automatisk taligenkänning",
-          "details": "Handy använder Whisper.cpp för snabb, lokal tal-till-text-behandling. Tack till det fantastiska arbete som utförts av Georgi Gerganov med medarbetare."
+          "details": "HanhCute använder Whisper.cpp för snabb, lokal tal-till-text-behandling. Tack till det fantastiska arbete som utförts av Georgi Gerganov med medarbetare."
         }
       }
     }
@@ -583,7 +583,7 @@
   },
   "appLanguage": {
     "title": "Applikationsspråk",
-    "description": "Ändra språket i Handy-gränssnittet"
+    "description": "Ändra språket i HanhCute-gränssnittet"
   },
   "overlay": {
     "transcribing": "Transkriberar...",

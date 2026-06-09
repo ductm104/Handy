@@ -170,7 +170,7 @@
     "general": {
       "title": "Общи",
       "shortcut": {
-        "title": "Бързи клавиши на Handy",
+        "title": "Бързи клавиши на HanhCute",
         "description": "Настройте клавишни комбинации за стартиране на запис за реч към текст",
         "loading": "Зареждане на бързите клавиши...",
         "none": "Няма настроени бързи клавиши",
@@ -288,11 +288,11 @@
       },
       "autostart": {
         "label": "Стартиране със системата",
-        "description": "Автоматично стартиране на Handy при влизане в профила ви."
+        "description": "Автоматично стартиране на HanhCute при влизане в профила ви."
       },
       "showTrayIcon": {
         "label": "Икона в системната област",
-        "description": "Показване на иконата на Handy в системната област."
+        "description": "Показване на иконата на HanhCute в системната област."
       },
       "overlay": {
         "title": "Позиция на наслагването",
@@ -521,11 +521,11 @@
       "title": "За приложението",
       "version": {
         "title": "Версия",
-        "description": "Текуща версия на Handy"
+        "description": "Текуща версия на HanhCute"
       },
       "appDataDirectory": {
         "title": "Папка с данни на приложението",
-        "description": "Мястото, където Handy съхранява данните си"
+        "description": "Мястото, където HanhCute съхранява данните си"
       },
       "sourceCode": {
         "title": "Изходен код",
@@ -534,7 +534,7 @@
       },
       "supportDevelopment": {
         "title": "Подкрепете разработката",
-        "description": "Помогнете ни да продължим да развиваме Handy",
+        "description": "Помогнете ни да продължим да развиваме HanhCute",
         "button": "Дарение"
       },
       "acknowledgments": {
@@ -542,7 +542,7 @@
         "whisper": {
           "title": "Whisper.cpp",
           "description": "Високопроизводително изпълнение на автоматичния модел за разпознаване на реч Whisper на OpenAI",
-          "details": "Handy използва Whisper.cpp за бързо локално реч-към-текст. Благодарности на Georgi Gerganov и сътрудниците за отличната работа."
+          "details": "HanhCute използва Whisper.cpp за бързо локално реч-към-текст. Благодарности на Georgi Gerganov и сътрудниците за отличната работа."
         }
       }
     }
@@ -583,7 +583,7 @@
   },
   "appLanguage": {
     "title": "Език на приложението",
-    "description": "Промяна на езика на интерфейса на Handy"
+    "description": "Промяна на езика на интерфейса на HanhCute"
   },
   "overlay": {
     "transcribing": "Транскрибиране...",

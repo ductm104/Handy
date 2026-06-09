@@ -2392,7 +2392,26 @@ dependencies = [
 ]
 
 [[package]]
-name = "handy"
+name = "handy-keys"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e1c1bb519fbead4e7344bf0fe32718c4cea30fc05e03fc65c242df064f515b03"
+dependencies = [
+ "bitflags 2.11.0",
+ "block2",
+ "objc2",
+ "objc2-app-kit",
+ "objc2-core-foundation",
+ "objc2-core-graphics",
+ "objc2-foundation",
+ "rdev 0.5.3",
+ "serde",
+ "thiserror 2.0.18",
+ "windows 0.58.0",
+]
+
+[[package]]
+name = "hanhcute"
 version = "0.8.3"
 dependencies = [
  "anyhow",
@@ -2450,25 +2469,6 @@ dependencies = [
  "whisper-rs",
  "windows 0.61.3",
  "winreg 0.55.0",
-]
-
-[[package]]
-name = "handy-keys"
-version = "0.2.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e1c1bb519fbead4e7344bf0fe32718c4cea30fc05e03fc65c242df064f515b03"
-dependencies = [
- "bitflags 2.11.0",
- "block2",
- "objc2",
- "objc2-app-kit",
- "objc2-core-foundation",
- "objc2-core-graphics",
- "objc2-foundation",
- "rdev 0.5.3",
- "serde",
- "thiserror 2.0.18",
- "windows 0.58.0",
 ]
 
 [[package]]

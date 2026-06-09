@@ -91,7 +91,7 @@ export CLANG_MODULE_CACHE_PATH="${CLANG_MODULE_CACHE_PATH:-$BUILD_CACHE_DIR/clan
 
 if [[ "$RUN_DEV" == true ]]; then
   echo "Starting Tauri development mode..."
-  CMAKE_POLICY_VERSION_MINIMUM="${CMAKE_POLICY_VERSION_MINIMUM:-3.5}" bun run tauri dev --config '{"identifier":"com.pais.handy.dev"}'
+  CMAKE_POLICY_VERSION_MINIMUM="${CMAKE_POLICY_VERSION_MINIMUM:-3.5}" bun run tauri dev --config '{"identifier":"com.hanhcute.dev"}'
 else
   TAURI_BUILD_ARGS=(build --bundles app)
 
