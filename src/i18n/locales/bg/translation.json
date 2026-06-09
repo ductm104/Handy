@@ -97,26 +97,6 @@
     "errors": {
       "loadModels": "Неуспешно зареждане на наличните модели",
       "downloadModel": "Неуспешно изтегляне на модела: {{error}}"
-    },
-    "permissions": {
-      "title": "Необходими разрешения",
-      "description": "Handy се нуждае от няколко разрешения, за да работи правилно.",
-      "microphone": {
-        "title": "Достъп до микрофон",
-        "description": "Необходим е, за да чуе гласа ви при транскрипция."
-      },
-      "accessibility": {
-        "title": "Достъп за достъпност",
-        "description": "Необходим е, за да въвежда транскрибирания текст във вашите приложения."
-      },
-      "grant": "Даване на разрешение",
-      "granted": "Разрешено",
-      "waiting": "Изчакване...",
-      "allGranted": "Готово!",
-      "errors": {
-        "checkFailed": "Проверката на разрешенията не бе успешна. Опитайте отново.",
-        "requestFailed": "Заявката за разрешение не бе успешна. Опитайте отново."
-      }
     }
   },
   "modelSelector": {
@@ -151,6 +131,31 @@
     }
   },
   "settings": {
+    "fileTranscription": {
+      "title": "File Transcription",
+      "description": "Choose an audio or video file and transcribe its audio with the selected local model.",
+      "selectTitle": "Select an audio or video file",
+      "selectDescription": "Use MP3, MP4, M4A, AAC, WAV, FLAC, or OGG files.",
+      "supportedFormats": "Supported: MP3, MP4, M4A, AAC, WAV, FLAC, OGG",
+      "selectFile": "Select File",
+      "changeFile": "Change File",
+      "removeFile": "Remove File",
+      "transcribe": "Transcribe File",
+      "transcribing": "Transcribing...",
+      "outputTitle": "Transcript",
+      "outputPlaceholder": "The transcription will appear here.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "success": "File transcription complete",
+      "noModel": "Download and select a transcription model before transcribing a file.",
+      "fileFilterName": "Media files",
+      "errors": {
+        "noFile": "Select a file first.",
+        "noModel": "No downloaded transcription model is selected.",
+        "transcribe": "Failed to transcribe file.",
+        "copy": "Failed to copy transcription."
+      }
+    },
     "modelSettings": {
       "title": "Настройки на {{model}}",
       "noSettingsNeeded": "Този модел работи автоматично без нужда от конфигурация."
@@ -420,9 +425,9 @@
     },
     "history": {
       "title": "История",
-      "openFolder": "Отваряне на папката с записи",
+      "openFolder": "Open Audio Folder",
       "loading": "Зареждане на историята...",
-      "empty": "Все още няма транскрипции. Започнете запис, за да изградите история!",
+      "empty": "No file transcriptions yet. Select a file to build your history!",
       "copyToClipboard": "Копиране на транскрипцията в клипборда",
       "save": "Запазване на транскрипцията",
       "unsave": "Премахване от запазените",
@@ -461,8 +466,8 @@
         "entries": "записа"
       },
       "recordingRetention": {
-        "title": "Автоматично изтриване на записи",
-        "description": "Автоматично изтриване на стари записи за пестене на място",
+        "title": "Auto-Delete Audio Files",
+        "description": "Automatically delete old saved audio files to save space",
         "never": "Никога",
         "preserveLimit": "Запазване на последните {{count}}",
         "days3": "След 3 дни",
@@ -553,7 +558,7 @@
     "preparing": "Подготовка...",
     "checkForUpdates": "Проверка за актуализации",
     "portableUpdateTitle": "Необходима е ръчна актуализация",
-    "portableUpdateMessage": "Преносимите инсталации не могат да бъдат актуализирани автоматично. За актуализация: изтеглете най-новия NSIS инсталатор от GitHub Releases, инсталирайте го в същата папка, след което копирайте папката Data/ (настройки, модели, записи) от старата версия в новата.",
+    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, saved audio) from the old version to the new one.",
     "portableUpdateButton": "Отвори GitHub Releases"
   },
   "common": {
@@ -578,24 +583,8 @@
     "no": "Не",
     "noOptionsFound": "Няма намерени опции"
   },
-  "accessibility": {
-    "permissionsRequired": "Необходими са разрешения за достъпност",
-    "permissionsDescription": "Handy се нуждае от разрешения за достъпност, за да въвежда транскрибирания текст.",
-    "openSettings": "Отваряне на системните настройки",
-    "dismiss": "Затваряне"
-  },
   "errors": {
     "loadDirectory": "Грешка при зареждане на папката: {{error}}",
-    "micPermissionDeniedTitle": "Достъпът до микрофона е отказан",
-    "micPermissionDenied": {
-      "generic": "Операционната система отказа достъп до микрофона. Моля, дайте разрешение за микрофон в системните настройки.",
-      "windows": "Включете достъп до микрофона в Настройки → Поверителност и сигурност → Микрофон (включително за настолни приложения).",
-      "macos": "Дайте достъп до микрофона в Системни настройки → Поверителност и сигурност → Микрофон.",
-      "linux": "Дайте достъп до микрофона в настройките за звук или поверителност на системата."
-    },
-    "noInputDeviceTitle": "Не е намерен микрофон",
-    "noInputDevice": "Не е открито аудио входно устройство. Свържете микрофон или слушалки и опитайте отново.",
-    "recordingFailed": "Стартирането на записа не бе успешно: {{error}}",
     "modelLoadFailed": "Зареждането на модела не бе успешно: {{model}}",
     "modelLoadFailedUnknown": "неизвестен модел",
     "pasteFailedTitle": "Неуспешно поставяне на текст",

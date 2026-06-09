@@ -97,26 +97,6 @@
     "errors": {
       "loadModels": "利用可能なモデルの読み込みに失敗しました",
       "downloadModel": "モデルのダウンロードに失敗しました: {{error}}"
-    },
-    "permissions": {
-      "title": "権限が必要です",
-      "description": "Handyが正常に動作するにはいくつかの権限が必要です。",
-      "microphone": {
-        "title": "マイクへのアクセス",
-        "description": "文字起こしのためにあなたの声を聞くために必要です。"
-      },
-      "accessibility": {
-        "title": "アクセシビリティへのアクセス",
-        "description": "アプリケーションに文字起こしテキストを入力するために必要です。"
-      },
-      "grant": "権限を許可",
-      "granted": "許可済み",
-      "waiting": "待機中...",
-      "allGranted": "準備完了！",
-      "errors": {
-        "checkFailed": "権限の確認に失敗しました。もう一度お試しください。",
-        "requestFailed": "権限のリクエストに失敗しました。もう一度お試しください。"
-      }
     }
   },
   "modelSelector": {
@@ -151,6 +131,31 @@
     "cancelDownload": "ダウンロードをキャンセル"
   },
   "settings": {
+    "fileTranscription": {
+      "title": "File Transcription",
+      "description": "Choose an audio or video file and transcribe its audio with the selected local model.",
+      "selectTitle": "Select an audio or video file",
+      "selectDescription": "Use MP3, MP4, M4A, AAC, WAV, FLAC, or OGG files.",
+      "supportedFormats": "Supported: MP3, MP4, M4A, AAC, WAV, FLAC, OGG",
+      "selectFile": "Select File",
+      "changeFile": "Change File",
+      "removeFile": "Remove File",
+      "transcribe": "Transcribe File",
+      "transcribing": "Transcribing...",
+      "outputTitle": "Transcript",
+      "outputPlaceholder": "The transcription will appear here.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "success": "File transcription complete",
+      "noModel": "Download and select a transcription model before transcribing a file.",
+      "fileFilterName": "Media files",
+      "errors": {
+        "noFile": "Select a file first.",
+        "noModel": "No downloaded transcription model is selected.",
+        "transcribe": "Failed to transcribe file.",
+        "copy": "Failed to copy transcription."
+      }
+    },
     "modelSettings": {
       "title": "{{model}} 設定",
       "noSettingsNeeded": "このモデルは設定不要で自動的に動作します。"
@@ -420,9 +425,9 @@
     },
     "history": {
       "title": "履歴",
-      "openFolder": "録音フォルダを開く",
+      "openFolder": "Open Audio Folder",
       "loading": "履歴を読み込み中...",
-      "empty": "まだ文字起こしがありません。録音を開始して履歴を作成しましょう！",
+      "empty": "No file transcriptions yet. Select a file to build your history!",
       "copyToClipboard": "文字起こしをクリップボードにコピー",
       "save": "文字起こしを保存",
       "unsave": "保存から削除",
@@ -461,8 +466,8 @@
         "entries": "件"
       },
       "recordingRetention": {
-        "title": "録音の自動削除",
-        "description": "古い録音を自動的に削除して容量を節約",
+        "title": "Auto-Delete Audio Files",
+        "description": "Automatically delete old saved audio files to save space",
         "never": "しない",
         "preserveLimit": "最新{{count}}件を保持",
         "days3": "3日後",
@@ -553,7 +558,7 @@
     "preparing": "準備中...",
     "checkForUpdates": "アップデートを確認",
     "portableUpdateTitle": "Manual update required",
-    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, recordings) from the old version to the new one.",
+    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, saved audio) from the old version to the new one.",
     "portableUpdateButton": "Open GitHub Releases"
   },
   "common": {
@@ -578,24 +583,8 @@
     "no": "いいえ",
     "noOptionsFound": "オプションが見つかりません"
   },
-  "accessibility": {
-    "permissionsRequired": "アクセシビリティ権限が必要です",
-    "permissionsDescription": "Handyが文字起こしテキストを入力するには、アクセシビリティ権限が必要です。",
-    "openSettings": "システム設定を開く",
-    "dismiss": "閉じる"
-  },
   "errors": {
     "loadDirectory": "ディレクトリの読み込みエラー: {{error}}",
-    "micPermissionDeniedTitle": "マイクへのアクセスが拒否されました",
-    "micPermissionDenied": {
-      "generic": "オペレーティングシステムによりマイクへのアクセスが拒否されました。システム設定でマイクの許可を付与してください。",
-      "windows": "設定 → プライバシーとセキュリティ → マイク（デスクトップアプリのアクセスを含む）でマイクへのアクセスを有効にしてください。",
-      "macos": "システム設定 → プライバシーとセキュリティ → マイクでマイクへのアクセスを許可してください。",
-      "linux": "システムのサウンドまたはプライバシー設定でマイクへのアクセスを許可してください。"
-    },
-    "noInputDeviceTitle": "マイクが見つかりません",
-    "noInputDevice": "オーディオ入力デバイスが検出されませんでした。マイクまたはヘッドセットを接続してから再試行してください。",
-    "recordingFailed": "録音の開始に失敗しました: {{error}}",
     "modelLoadFailed": "モデルの読み込みに失敗しました: {{model}}",
     "modelLoadFailedUnknown": "不明なモデル",
     "pasteFailedTitle": "テキストの貼り付けに失敗しました",

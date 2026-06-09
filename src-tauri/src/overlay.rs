@@ -222,6 +222,7 @@ fn calculate_overlay_position(app_handle: &AppHandle) -> Option<(f64, f64)> {
 }
 
 /// Creates the recording overlay window and keeps it hidden by default
+#[allow(dead_code)]
 #[cfg(not(target_os = "macos"))]
 pub fn create_recording_overlay(app_handle: &AppHandle) {
     // On Linux (Wayland), monitor detection often fails, but we don't need exact coordinates
@@ -283,6 +284,7 @@ pub fn create_recording_overlay(app_handle: &AppHandle) {
 }
 
 /// Creates the recording overlay panel and keeps it hidden by default (macOS)
+#[allow(dead_code)]
 #[cfg(target_os = "macos")]
 pub fn create_recording_overlay(app_handle: &AppHandle) {
     if let Some((x, y)) = calculate_overlay_position(app_handle) {

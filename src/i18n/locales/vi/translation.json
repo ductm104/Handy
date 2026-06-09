@@ -97,26 +97,6 @@
     "errors": {
       "loadModels": "Không thể tải các mô hình có sẵn",
       "downloadModel": "Không thể tải mô hình: {{error}}"
-    },
-    "permissions": {
-      "title": "Cần cấp quyền",
-      "description": "Handy cần một số quyền để hoạt động bình thường.",
-      "microphone": {
-        "title": "Quyền truy cập Micrô",
-        "description": "Cần thiết để nghe giọng nói của bạn để chuyển đổi."
-      },
-      "accessibility": {
-        "title": "Quyền truy cập Trợ năng",
-        "description": "Cần thiết để nhập văn bản đã chuyển đổi vào các ứng dụng của bạn."
-      },
-      "grant": "Cấp quyền",
-      "granted": "Đã cấp",
-      "waiting": "Đang chờ...",
-      "allGranted": "Hoàn tất!",
-      "errors": {
-        "checkFailed": "Không thể kiểm tra quyền. Vui lòng thử lại.",
-        "requestFailed": "Không thể yêu cầu quyền. Vui lòng thử lại."
-      }
     }
   },
   "modelSelector": {
@@ -151,6 +131,31 @@
     "cancelDownload": "Hủy tải xuống"
   },
   "settings": {
+    "fileTranscription": {
+      "title": "File Transcription",
+      "description": "Choose an audio or video file and transcribe its audio with the selected local model.",
+      "selectTitle": "Select an audio or video file",
+      "selectDescription": "Use MP3, MP4, M4A, AAC, WAV, FLAC, or OGG files.",
+      "supportedFormats": "Supported: MP3, MP4, M4A, AAC, WAV, FLAC, OGG",
+      "selectFile": "Select File",
+      "changeFile": "Change File",
+      "removeFile": "Remove File",
+      "transcribe": "Transcribe File",
+      "transcribing": "Transcribing...",
+      "outputTitle": "Transcript",
+      "outputPlaceholder": "The transcription will appear here.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "success": "File transcription complete",
+      "noModel": "Download and select a transcription model before transcribing a file.",
+      "fileFilterName": "Media files",
+      "errors": {
+        "noFile": "Select a file first.",
+        "noModel": "No downloaded transcription model is selected.",
+        "transcribe": "Failed to transcribe file.",
+        "copy": "Failed to copy transcription."
+      }
+    },
     "modelSettings": {
       "title": "Cài đặt {{model}}",
       "noSettingsNeeded": "Mô hình này hoạt động tự động mà không cần cấu hình."
@@ -420,9 +425,9 @@
     },
     "history": {
       "title": "Lịch sử",
-      "openFolder": "Mở thư mục ghi âm",
+      "openFolder": "Open Audio Folder",
       "loading": "Đang tải lịch sử...",
-      "empty": "Chưa có bản ghi nào. Bắt đầu ghi âm để xây dựng lịch sử của bạn!",
+      "empty": "No file transcriptions yet. Select a file to build your history!",
       "copyToClipboard": "Sao chép bản ghi vào clipboard",
       "save": "Lưu bản ghi",
       "unsave": "Xóa khỏi đã lưu",
@@ -461,8 +466,8 @@
         "entries": "mục"
       },
       "recordingRetention": {
-        "title": "Tự động xóa ghi âm",
-        "description": "Tự động xóa các bản ghi âm cũ để tiết kiệm dung lượng",
+        "title": "Auto-Delete Audio Files",
+        "description": "Automatically delete old saved audio files to save space",
         "never": "Không bao giờ",
         "preserveLimit": "Giữ {{count}} bản mới nhất",
         "days3": "Sau 3 ngày",
@@ -553,7 +558,7 @@
     "preparing": "Đang chuẩn bị...",
     "checkForUpdates": "Kiểm tra cập nhật",
     "portableUpdateTitle": "Manual update required",
-    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, recordings) from the old version to the new one.",
+    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, saved audio) from the old version to the new one.",
     "portableUpdateButton": "Open GitHub Releases"
   },
   "common": {
@@ -578,24 +583,8 @@
     "no": "Không",
     "noOptionsFound": "Không tìm thấy tùy chọn"
   },
-  "accessibility": {
-    "permissionsRequired": "Cần quyền truy cập",
-    "permissionsDescription": "Handy cần quyền truy cập để gõ văn bản đã chuyển đổi.",
-    "openSettings": "Mở Cài đặt Hệ thống",
-    "dismiss": "Bỏ qua"
-  },
   "errors": {
     "loadDirectory": "Lỗi khi tải thư mục: {{error}}",
-    "micPermissionDeniedTitle": "Quyền truy cập micrô bị từ chối",
-    "micPermissionDenied": {
-      "generic": "Quyền truy cập micrô đã bị hệ điều hành từ chối. Vui lòng cấp quyền micrô trong cài đặt hệ thống.",
-      "windows": "Bật quyền truy cập micrô trong Cài đặt → Quyền riêng tư & bảo mật → Micrô (bao gồm quyền truy cập ứng dụng máy tính).",
-      "macos": "Cấp quyền truy cập micrô trong Cài đặt hệ thống → Quyền riêng tư & Bảo mật → Micrô.",
-      "linux": "Cấp quyền truy cập micrô trong cài đặt âm thanh hoặc quyền riêng tư của hệ thống."
-    },
-    "noInputDeviceTitle": "Không tìm thấy micrô",
-    "noInputDevice": "Không phát hiện thiết bị đầu vào âm thanh nào. Vui lòng kết nối micrô hoặc tai nghe và thử lại.",
-    "recordingFailed": "Không thể bắt đầu ghi âm: {{error}}",
     "modelLoadFailed": "Không thể tải mô hình: {{model}}",
     "modelLoadFailedUnknown": "mô hình không xác định",
     "pasteFailedTitle": "Không thể dán văn bản",

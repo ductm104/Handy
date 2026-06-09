@@ -1,7 +1,22 @@
 use anyhow::Result;
 use hound::{WavReader, WavSpec, WavWriter};
-use log::debug;
+use log::{debug, warn};
+use rubato::{FftFixedIn, Resampler};
+use std::fs::File;
+use std::io::ErrorKind;
 use std::path::Path;
+use symphonia::core::audio::SampleBuffer;
+use symphonia::core::codecs::{DecoderOptions, CODEC_TYPE_NULL};
+use symphonia::core::errors::Error as SymphoniaError;
+use symphonia::core::formats::FormatOptions;
+use symphonia::core::io::{MediaSourceStream, MediaSourceStreamOptions};
+use symphonia::core::meta::MetadataOptions;
+use symphonia::core::probe::Hint;
+use symphonia::core::units;
+use symphonia::default::{get_codecs, get_probe};
+
+const TRANSCRIPTION_SAMPLE_RATE: usize = 16_000;
+const RESAMPLER_CHUNK_SIZE: usize = 1024;
 
 /// Read a WAV file and return normalised f32 samples.
 pub fn read_wav_samples<P: AsRef<Path>>(file_path: P) -> Result<Vec<f32>> {
@@ -11,6 +26,153 @@ pub fn read_wav_samples<P: AsRef<Path>>(file_path: P) -> Result<Vec<f32>> {
         .map(|s| s.map(|v| v as f32 / i16::MAX as f32))
         .collect::<Result<Vec<f32>, _>>()?;
     Ok(samples)
+}
+
+/// Decode a media file, extract its first audio track, downmix it to mono, and
+/// resample it to the 16 kHz input expected by the transcription engines.
+pub fn read_media_file_samples<P: AsRef<Path>>(file_path: P) -> Result<Vec<f32>> {
+    let file_path = file_path.as_ref();
+    let file = Box::new(File::open(file_path)?);
+    let mss = MediaSourceStream::new(file, MediaSourceStreamOptions::default());
+
+    let mut hint = Hint::new();
+    if let Some(extension) = file_path.extension().and_then(|ext| ext.to_str()) {
+        hint.with_extension(extension);
+    }
+
+    let probed = get_probe().format(
+        &hint,
+        mss,
+        &FormatOptions::default(),
+        &MetadataOptions::default(),
+    )?;
+    let mut format = probed.format;
+
+    let codec_registry = get_codecs();
+    let decoder_options = DecoderOptions::default();
+    let mut decoder_init_error = None;
+    let mut selected_decoder = None;
+
+    for track in format.tracks() {
+        if track.codec_params.codec == CODEC_TYPE_NULL
+            || codec_registry.get_codec(track.codec_params.codec).is_none()
+        {
+            continue;
+        }
+
+        match codec_registry.make(&track.codec_params, &decoder_options) {
+            Ok(decoder) => {
+                selected_decoder = Some((track.id, decoder));
+                break;
+            }
+            Err(error) => {
+                decoder_init_error = Some(error.to_string());
+            }
+        }
+    }
+
+    let (track_id, mut decoder) = selected_decoder.ok_or_else(|| {
+        if let Some(error) = decoder_init_error {
+            anyhow::anyhow!("No decodable audio track found: {}", error)
+        } else {
+            anyhow::anyhow!("No supported audio track found")
+        }
+    })?;
+
+    let mut mono_samples = Vec::new();
+    let mut source_sample_rate = None;
+
+    loop {
+        let packet = match format.next_packet() {
+            Ok(packet) => packet,
+            Err(SymphoniaError::IoError(error)) if error.kind() == ErrorKind::UnexpectedEof => {
+                break
+            }
+            Err(SymphoniaError::IoError(error)) => return Err(error.into()),
+            Err(SymphoniaError::ResetRequired) => {
+                return Err(anyhow::anyhow!(
+                    "Decoder reset is required but not supported"
+                ));
+            }
+            Err(error) => return Err(error.into()),
+        };
+
+        if packet.track_id() != track_id {
+            continue;
+        }
+
+        let decoded = match decoder.decode(&packet) {
+            Ok(decoded) => decoded,
+            Err(SymphoniaError::DecodeError(error)) => {
+                warn!("Skipping undecodable packet in {:?}: {}", file_path, error);
+                continue;
+            }
+            Err(SymphoniaError::IoError(error)) if error.kind() == ErrorKind::UnexpectedEof => {
+                break
+            }
+            Err(SymphoniaError::ResetRequired) => {
+                return Err(anyhow::anyhow!(
+                    "Decoder reset is required but not supported"
+                ));
+            }
+            Err(error) => return Err(error.into()),
+        };
+
+        let spec = *decoded.spec();
+        source_sample_rate.get_or_insert(spec.rate);
+        let channel_count = spec.channels.count().max(1);
+        let mut sample_buffer =
+            SampleBuffer::<f32>::new(units::Duration::from(decoded.capacity() as u64), spec);
+        sample_buffer.copy_interleaved_ref(decoded);
+
+        for frame in sample_buffer.samples().chunks(channel_count) {
+            let sum = frame.iter().copied().sum::<f32>();
+            mono_samples.push((sum / channel_count as f32).clamp(-1.0, 1.0));
+        }
+    }
+
+    if mono_samples.is_empty() {
+        return Err(anyhow::anyhow!("No audio samples found in file"));
+    }
+
+    let source_sample_rate = source_sample_rate
+        .ok_or_else(|| anyhow::anyhow!("Could not determine media sample rate"))?;
+    resample_to_transcription_rate(mono_samples, source_sample_rate as usize)
+}
+
+fn resample_to_transcription_rate(
+    samples: Vec<f32>,
+    source_sample_rate: usize,
+) -> Result<Vec<f32>> {
+    if source_sample_rate == TRANSCRIPTION_SAMPLE_RATE || samples.is_empty() {
+        return Ok(samples);
+    }
+
+    let mut resampler = FftFixedIn::<f32>::new(
+        source_sample_rate,
+        TRANSCRIPTION_SAMPLE_RATE,
+        RESAMPLER_CHUNK_SIZE,
+        1,
+        1,
+    )?;
+    let mut resampled =
+        Vec::with_capacity(samples.len() * TRANSCRIPTION_SAMPLE_RATE / source_sample_rate.max(1));
+
+    for chunk in samples.chunks(RESAMPLER_CHUNK_SIZE) {
+        if chunk.len() == RESAMPLER_CHUNK_SIZE {
+            let output = resampler.process(&[chunk], None)?;
+            resampled.extend_from_slice(&output[0]);
+            continue;
+        }
+
+        let mut padded = chunk.to_vec();
+        padded.resize(RESAMPLER_CHUNK_SIZE, 0.0);
+        let output = resampler.process(&[&padded], None)?;
+        let expected_len = (chunk.len() * TRANSCRIPTION_SAMPLE_RATE).div_ceil(source_sample_rate);
+        resampled.extend_from_slice(&output[0][..expected_len.min(output[0].len())]);
+    }
+
+    Ok(resampled)
 }
 
 /// Verify a WAV file by reading it back and checking the sample count.

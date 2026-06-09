@@ -11,11 +11,11 @@ pub struct CliArgs {
     #[arg(long)]
     pub no_tray: bool,
 
-    /// Toggle transcription on/off (sent to running instance)
+    /// Open the running instance (legacy recording toggle is disabled in file-only mode)
     #[arg(long)]
     pub toggle_transcription: bool,
 
-    /// Toggle transcription with post-processing on/off (sent to running instance)
+    /// Open the running instance (legacy recording toggle is disabled in file-only mode)
     #[arg(long)]
     pub toggle_post_process: bool,
 

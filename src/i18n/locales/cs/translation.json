@@ -97,26 +97,6 @@
     "errors": {
       "loadModels": "Nepodařilo se načíst dostupné modely",
       "downloadModel": "Nepodařilo se stáhnout model: {{error}}"
-    },
-    "permissions": {
-      "title": "Vyžadována oprávnění",
-      "description": "Handy potřebuje několik oprávnění pro správné fungování.",
-      "microphone": {
-        "title": "Přístup k mikrofonu",
-        "description": "Potřebný pro zachycení vašeho hlasu k přepisu."
-      },
-      "accessibility": {
-        "title": "Přístup k usnadnění",
-        "description": "Potřebný pro psaní přepsaného textu do vašich aplikací."
-      },
-      "grant": "Udělit oprávnění",
-      "granted": "Uděleno",
-      "waiting": "Čekání...",
-      "allGranted": "Vše připraveno!",
-      "errors": {
-        "checkFailed": "Nepodařilo se zkontrolovat oprávnění. Zkuste to prosím znovu.",
-        "requestFailed": "Nepodařilo se požádat o oprávnění. Zkuste to prosím znovu."
-      }
     }
   },
   "modelSelector": {
@@ -151,6 +131,31 @@
     "cancelDownload": "Zrušit stahování"
   },
   "settings": {
+    "fileTranscription": {
+      "title": "File Transcription",
+      "description": "Choose an audio or video file and transcribe its audio with the selected local model.",
+      "selectTitle": "Select an audio or video file",
+      "selectDescription": "Use MP3, MP4, M4A, AAC, WAV, FLAC, or OGG files.",
+      "supportedFormats": "Supported: MP3, MP4, M4A, AAC, WAV, FLAC, OGG",
+      "selectFile": "Select File",
+      "changeFile": "Change File",
+      "removeFile": "Remove File",
+      "transcribe": "Transcribe File",
+      "transcribing": "Transcribing...",
+      "outputTitle": "Transcript",
+      "outputPlaceholder": "The transcription will appear here.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "success": "File transcription complete",
+      "noModel": "Download and select a transcription model before transcribing a file.",
+      "fileFilterName": "Media files",
+      "errors": {
+        "noFile": "Select a file first.",
+        "noModel": "No downloaded transcription model is selected.",
+        "transcribe": "Failed to transcribe file.",
+        "copy": "Failed to copy transcription."
+      }
+    },
     "modelSettings": {
       "title": "Nastavení {{model}}",
       "noSettingsNeeded": "Tento model funguje automaticky bez nutnosti konfigurace."
@@ -420,9 +425,9 @@
     },
     "history": {
       "title": "Historie",
-      "openFolder": "Otevřít složku nahrávek",
+      "openFolder": "Open Audio Folder",
       "loading": "Načítám historii...",
-      "empty": "Zatím žádné přepisy. Začněte nahrávat a vytvořte si historii!",
+      "empty": "No file transcriptions yet. Select a file to build your history!",
       "copyToClipboard": "Kopírovat přepis do schránky",
       "save": "Uložit přepis",
       "unsave": "Odebrat z uložených",
@@ -461,8 +466,8 @@
         "entries": "záznamů"
       },
       "recordingRetention": {
-        "title": "Automatické mazání nahrávek",
-        "description": "Automaticky mazat staré nahrávky pro úsporu místa",
+        "title": "Auto-Delete Audio Files",
+        "description": "Automatically delete old saved audio files to save space",
         "never": "Nikdy",
         "preserveLimit": "Ponechat posledních {{count}}",
         "days3": "Po 3 dnech",
@@ -553,7 +558,7 @@
     "preparing": "Příprava...",
     "checkForUpdates": "Zkontrolovat aktualizace",
     "portableUpdateTitle": "Manual update required",
-    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, recordings) from the old version to the new one.",
+    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, saved audio) from the old version to the new one.",
     "portableUpdateButton": "Open GitHub Releases"
   },
   "common": {
@@ -578,24 +583,8 @@
     "no": "Ne",
     "noOptionsFound": "Nenalezeny žádné možnosti"
   },
-  "accessibility": {
-    "permissionsRequired": "Vyžadována oprávnění usnadnění přístupu",
-    "permissionsDescription": "Handy potřebuje oprávnění usnadnění přístupu, aby mohlo psát přepsaný text.",
-    "openSettings": "Otevřít Nastavení systému",
-    "dismiss": "Zavřít"
-  },
   "errors": {
     "loadDirectory": "Chyba při načítání adresáře: {{error}}",
-    "micPermissionDeniedTitle": "Přístup k mikrofonu byl odepřen",
-    "micPermissionDenied": {
-      "generic": "Přístup k mikrofonu byl odepřen operačním systémem. Povolte prosím přístup k mikrofonu v nastavení systému.",
-      "windows": "Povolte přístup k mikrofonu v Nastavení → Soukromí a zabezpečení → Mikrofon (včetně přístupu desktopových aplikací).",
-      "macos": "Povolte přístup k mikrofonu v Nastavení systému → Soukromí a zabezpečení → Mikrofon.",
-      "linux": "Povolte přístup k mikrofonu v nastavení zvuku nebo soukromí vašeho systému."
-    },
-    "noInputDeviceTitle": "Mikrofon nebyl nalezen",
-    "noInputDevice": "Nebylo detekováno žádné zvukové vstupní zařízení. Připojte mikrofon nebo sluchátka a zkuste to znovu.",
-    "recordingFailed": "Nepodařilo se spustit nahrávání: {{error}}",
     "modelLoadFailed": "Nepodařilo se načíst model: {{model}}",
     "modelLoadFailedUnknown": "neznámý model",
     "pasteFailedTitle": "Vložení textu se nezdařilo",

@@ -97,26 +97,6 @@
     "errors": {
       "loadModels": "Misslyckades med att ladda tillgängliga modeller",
       "downloadModel": "Misslyckades med att ladda ner modell: {{error}}"
-    },
-    "permissions": {
-      "title": "Behörigheter krävs",
-      "description": "Handy behöver ett par behörigheter för att fungera korrekt.",
-      "microphone": {
-        "title": "Mikrofonåtkomst",
-        "description": "Krävs för att höra din röst för transkription."
-      },
-      "accessibility": {
-        "title": "Hjälpmedelsåtkomst",
-        "description": "Krävs för att skriva transkriberad text i dina program."
-      },
-      "grant": "Bevilja behörighet",
-      "granted": "Beviljad",
-      "waiting": "Väntar...",
-      "allGranted": "Allt klart!",
-      "errors": {
-        "checkFailed": "Misslyckades med att kontrollera behörigheter. Försök igen.",
-        "requestFailed": "Misslyckades med att begära behörighet. Försök igen."
-      }
     }
   },
   "modelSelector": {
@@ -151,6 +131,31 @@
     }
   },
   "settings": {
+    "fileTranscription": {
+      "title": "File Transcription",
+      "description": "Choose an audio or video file and transcribe its audio with the selected local model.",
+      "selectTitle": "Select an audio or video file",
+      "selectDescription": "Use MP3, MP4, M4A, AAC, WAV, FLAC, or OGG files.",
+      "supportedFormats": "Supported: MP3, MP4, M4A, AAC, WAV, FLAC, OGG",
+      "selectFile": "Select File",
+      "changeFile": "Change File",
+      "removeFile": "Remove File",
+      "transcribe": "Transcribe File",
+      "transcribing": "Transcribing...",
+      "outputTitle": "Transcript",
+      "outputPlaceholder": "The transcription will appear here.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "success": "File transcription complete",
+      "noModel": "Download and select a transcription model before transcribing a file.",
+      "fileFilterName": "Media files",
+      "errors": {
+        "noFile": "Select a file first.",
+        "noModel": "No downloaded transcription model is selected.",
+        "transcribe": "Failed to transcribe file.",
+        "copy": "Failed to copy transcription."
+      }
+    },
     "modelSettings": {
       "title": "{{model}}-inställningar",
       "noSettingsNeeded": "Denna modell fungerar automatiskt utan att någon konfiguration krävs."
@@ -420,9 +425,9 @@
     },
     "history": {
       "title": "Historik",
-      "openFolder": "Öppna mapp för inspelningar",
+      "openFolder": "Open Audio Folder",
       "loading": "Laddar historik...",
-      "empty": "Inga transkriptioner ännu. Börja spela in för att bygga upp din historik!",
+      "empty": "No file transcriptions yet. Select a file to build your history!",
       "copyToClipboard": "Kopiera transkription till urklipp",
       "save": "Spara transkription",
       "unsave": "Ta bort från sparade",
@@ -461,8 +466,8 @@
         "entries": "poster"
       },
       "recordingRetention": {
-        "title": "Radera inspelningar automatiskt",
-        "description": "Radera gamla inspelningar automatiskt för att spara utrymme",
+        "title": "Auto-Delete Audio Files",
+        "description": "Automatically delete old saved audio files to save space",
         "never": "Aldrig",
         "preserveLimit": "Behåll de senaste {{count}}",
         "days3": "Efter 3 dagar",
@@ -553,7 +558,7 @@
     "preparing": "Förbereder...",
     "checkForUpdates": "Sök efter uppdateringar",
     "portableUpdateTitle": "Manual update required",
-    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, recordings) from the old version to the new one.",
+    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, saved audio) from the old version to the new one.",
     "portableUpdateButton": "Open GitHub Releases"
   },
   "common": {
@@ -578,26 +583,10 @@
     "no": "Nej",
     "noOptionsFound": "Inga alternativ hittades"
   },
-  "accessibility": {
-    "permissionsRequired": "Behörigheter för hjälpmedel krävs",
-    "permissionsDescription": "Handy behöver behörighet för hjälpmedel för att kunna skriva transkriberad text.",
-    "openSettings": "Öppna systeminställningar",
-    "dismiss": "Avvisa"
-  },
   "errors": {
     "loadDirectory": "Fel vid laddning av mapp: {{error}}",
-    "micPermissionDeniedTitle": "Mikrofonåtkomst nekad",
-    "micPermissionDenied": {
-      "generic": "Mikrofonåtkomst nekades av operativsystemet. Bevilja mikrofonbehörighet i dina systeminställningar.",
-      "windows": "Aktivera mikrofonåtkomst i Inställningar → Integritet och säkerhet → Mikrofon (inklusive åtkomst till skrivbordsappar).",
-      "macos": "Bevilja mikrofonåtkomst i Systeminställningar → Integritet och säkerhet → Mikrofon.",
-      "linux": "Bevilja mikrofonåtkomst i systemets ljud- eller integritetsinställningar."
-    },
-    "recordingFailed": "Misslyckades med att starta inspelning: {{error}}",
     "modelLoadFailed": "Misslyckades med att ladda modell: {{model}}",
     "modelLoadFailedUnknown": "okänd modell",
-    "noInputDeviceTitle": "Ingen mikrofon hittades",
-    "noInputDevice": "Ingen ljudenhet hittades. Anslut en mikrofon eller ett headset och försök igen.",
     "pasteFailedTitle": "Det gick inte att klistra in texten",
     "pasteFailed": "Texten kunde inte klistras in i det aktiva programmet."
   },

@@ -97,26 +97,6 @@
     "errors": {
       "loadModels": "사용 가능한 모델을 불러오는데 실패했습니다",
       "downloadModel": "모델 다운로드 실패: {{error}}"
-    },
-    "permissions": {
-      "title": "권한 필요",
-      "description": "Handy가 제대로 작동하려면 몇 가지 권한이 필요합니다.",
-      "microphone": {
-        "title": "마이크 접근",
-        "description": "음성 인식을 위해 마이크 접근 권한이 필요합니다."
-      },
-      "accessibility": {
-        "title": "접근성 권한",
-        "description": "녹음된 텍스트를 애플리케이션에 입력하기 위해 필요합니다."
-      },
-      "grant": "권한 부여",
-      "granted": "승인됨",
-      "waiting": "대기 중...",
-      "allGranted": "모두 설정 완료!",
-      "errors": {
-        "checkFailed": "권한 확인에 실패했습니다. 다시 시도해주세요.",
-        "requestFailed": "권한 요청에 실패했습니다. 다시 시도해주세요."
-      }
     }
   },
   "modelSelector": {
@@ -151,6 +131,31 @@
     }
   },
   "settings": {
+    "fileTranscription": {
+      "title": "File Transcription",
+      "description": "Choose an audio or video file and transcribe its audio with the selected local model.",
+      "selectTitle": "Select an audio or video file",
+      "selectDescription": "Use MP3, MP4, M4A, AAC, WAV, FLAC, or OGG files.",
+      "supportedFormats": "Supported: MP3, MP4, M4A, AAC, WAV, FLAC, OGG",
+      "selectFile": "Select File",
+      "changeFile": "Change File",
+      "removeFile": "Remove File",
+      "transcribe": "Transcribe File",
+      "transcribing": "Transcribing...",
+      "outputTitle": "Transcript",
+      "outputPlaceholder": "The transcription will appear here.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "success": "File transcription complete",
+      "noModel": "Download and select a transcription model before transcribing a file.",
+      "fileFilterName": "Media files",
+      "errors": {
+        "noFile": "Select a file first.",
+        "noModel": "No downloaded transcription model is selected.",
+        "transcribe": "Failed to transcribe file.",
+        "copy": "Failed to copy transcription."
+      }
+    },
     "modelSettings": {
       "title": "{{model}} 설정",
       "noSettingsNeeded": "이 모델은 별도의 설정 없이 자동으로 작동합니다."
@@ -420,9 +425,9 @@
     },
     "history": {
       "title": "히스토리",
-      "openFolder": "녹음 폴더 열기",
+      "openFolder": "Open Audio Folder",
       "loading": "히스토리 로딩 중...",
-      "empty": "아직 변환된 내용이 없습니다. 녹음을 시작하여 히스토리를 만드세요!",
+      "empty": "No file transcriptions yet. Select a file to build your history!",
       "copyToClipboard": "녹음 내용을 클립보드에 복사",
       "save": "변환된 텍스트 저장",
       "unsave": "저장에서 제거",
@@ -461,8 +466,8 @@
         "entries": "항목"
       },
       "recordingRetention": {
-        "title": "녹음 자동 삭제",
-        "description": "공간을 절약하기 위해 오래된 녹음을 자동으로 삭제합니다",
+        "title": "Auto-Delete Audio Files",
+        "description": "Automatically delete old saved audio files to save space",
         "never": "안 함",
         "preserveLimit": "최근 {{count}}개 유지",
         "days3": "3일 후",
@@ -553,7 +558,7 @@
     "preparing": "준비 중...",
     "checkForUpdates": "업데이트 확인",
     "portableUpdateTitle": "Manual update required",
-    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, recordings) from the old version to the new one.",
+    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, saved audio) from the old version to the new one.",
     "portableUpdateButton": "Open GitHub Releases"
   },
   "common": {
@@ -578,24 +583,8 @@
     "no": "아니오",
     "noOptionsFound": "옵션을 찾을 수 없습니다"
   },
-  "accessibility": {
-    "permissionsRequired": "접근성 권한 필요",
-    "permissionsDescription": "Handy는 녹음된 텍스트를 입력하기 위해 접근성 권한이 필요합니다.",
-    "openSettings": "시스템 설정 열기",
-    "dismiss": "닫기"
-  },
   "errors": {
     "loadDirectory": "디렉토리 로딩 오류: {{error}}",
-    "micPermissionDeniedTitle": "마이크 접근이 거부되었습니다",
-    "micPermissionDenied": {
-      "generic": "운영 체제에서 마이크 접근을 거부했습니다. 시스템 설정에서 마이크 권한을 허용해 주세요.",
-      "windows": "설정 → 개인 정보 및 보안 → 마이크(데스크톱 앱 접근 포함)에서 마이크 접근을 활성화하세요.",
-      "macos": "시스템 설정 → 개인 정보 보호 및 보안 → 마이크에서 마이크 접근을 허용하세요.",
-      "linux": "시스템의 소리 또는 개인 정보 설정에서 마이크 접근을 허용하세요."
-    },
-    "noInputDeviceTitle": "마이크를 찾을 수 없음",
-    "noInputDevice": "오디오 입력 장치가 감지되지 않았습니다. 마이크 또는 헤드셋을 연결한 후 다시 시도해 주세요.",
-    "recordingFailed": "녹음을 시작하지 못했습니다: {{error}}",
     "modelLoadFailed": "모델을 불러오지 못했습니다: {{model}}",
     "modelLoadFailedUnknown": "알 수 없는 모델",
     "pasteFailedTitle": "텍스트 붙여넣기 실패",

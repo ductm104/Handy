@@ -97,26 +97,6 @@
     "errors": {
       "loadModels": "فشل تحميل النماذج المتاحة",
       "downloadModel": "فشل تنزيل النموذج: {{error}}"
-    },
-    "permissions": {
-      "title": "الأذونات المطلوبة",
-      "description": ".يحتاج Handy إلى بعض الأذونات ليعمل بشكل صحيح",
-      "microphone": {
-        "title": "الوصول إلى الميكروفون",
-        "description": ".مطلوب لسماع صوتك من أجل التفريغ الصوتي"
-      },
-      "accessibility": {
-        "title": "إمكانية الوصول",
-        "description": ".مطلوب لكتابة النص المفرغ في تطبيقاتك"
-      },
-      "grant": "منح الإذن",
-      "granted": "تم المنح",
-      "waiting": "...في الانتظار",
-      "allGranted": "كل شيء جاهز!",
-      "errors": {
-        "checkFailed": "فشل التحقق من الأذونات. يرجير المحاولة مرة أخرى.",
-        "requestFailed": "فشل طلب الإذن. يرجى المحاولة مرة أخرى."
-      }
     }
   },
   "modelSelector": {
@@ -151,6 +131,31 @@
     }
   },
   "settings": {
+    "fileTranscription": {
+      "title": "File Transcription",
+      "description": "Choose an audio or video file and transcribe its audio with the selected local model.",
+      "selectTitle": "Select an audio or video file",
+      "selectDescription": "Use MP3, MP4, M4A, AAC, WAV, FLAC, or OGG files.",
+      "supportedFormats": "Supported: MP3, MP4, M4A, AAC, WAV, FLAC, OGG",
+      "selectFile": "Select File",
+      "changeFile": "Change File",
+      "removeFile": "Remove File",
+      "transcribe": "Transcribe File",
+      "transcribing": "Transcribing...",
+      "outputTitle": "Transcript",
+      "outputPlaceholder": "The transcription will appear here.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "success": "File transcription complete",
+      "noModel": "Download and select a transcription model before transcribing a file.",
+      "fileFilterName": "Media files",
+      "errors": {
+        "noFile": "Select a file first.",
+        "noModel": "No downloaded transcription model is selected.",
+        "transcribe": "Failed to transcribe file.",
+        "copy": "Failed to copy transcription."
+      }
+    },
     "general": {
       "title": "عام",
       "shortcut": {
@@ -398,9 +403,9 @@
     },
     "history": {
       "title": "السجل",
-      "openFolder": "فتح مجلد التسجيلات",
+      "openFolder": "Open Audio Folder",
       "loading": "...جاري تحميل السجل",
-      "empty": "!لا يوجد تفريغ صوتي بعد. ابدأ التسجيل لبناء سجلك",
+      "empty": "No file transcriptions yet. Select a file to build your history!",
       "copyToClipboard": "نسخ التفريغ إلى الحافظة",
       "save": "حفظ التفريغ",
       "unsave": "إزالة من المحفوظات",
@@ -439,8 +444,8 @@
         "entries": "إدخالات"
       },
       "recordingRetention": {
-        "title": "حذف التسجيلات تلقائياً",
-        "description": "حذف التسجيلات القديمة تلقائياً لتوفير المساحة",
+        "title": "Auto-Delete Audio Files",
+        "description": "Automatically delete old saved audio files to save space",
         "never": "أبداً",
         "preserveLimit": "الاحتفاظ بآخر {{count}}",
         "days3": "بعد 3 أيام",
@@ -553,7 +558,7 @@
     "preparing": "...جاري التحضير",
     "checkForUpdates": "التحقق من وجود تحديثات",
     "portableUpdateTitle": "Manual update required",
-    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, recordings) from the old version to the new one.",
+    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, saved audio) from the old version to the new one.",
     "portableUpdateButton": "Open GitHub Releases"
   },
   "common": {
@@ -578,24 +583,8 @@
     "no": "لا",
     "noOptionsFound": "لم يتم العثور على خيارات"
   },
-  "accessibility": {
-    "permissionsRequired": "أذونات إمكانية الوصول مطلوبة",
-    "permissionsDescription": ".يحتاج Handy إلى أذونات إمكانية الوصول لكتابة النص المفرغ",
-    "openSettings": "فتح إعدادات النظام",
-    "dismiss": "تجاهل"
-  },
   "errors": {
     "loadDirectory": "خطأ في تحميل المجلد: {{error}}",
-    "micPermissionDeniedTitle": "تم رفض الوصول إلى الميكروفون",
-    "micPermissionDenied": {
-      "generic": "تم رفض الوصول إلى الميكروفون من قبل نظام التشغيل. يرجى منح إذن الميكروفون في إعدادات النظام.",
-      "windows": "قم بتمكين الوصول إلى الميكروفون في الإعدادات ← الخصوصية والأمان ← الميكروفون (بما في ذلك وصول تطبيقات سطح المكتب).",
-      "macos": "امنح الوصول إلى الميكروفون في إعدادات النظام ← الخصوصية والأمان ← الميكروفون.",
-      "linux": "امنح الوصول إلى الميكروفون في إعدادات الصوت أو الخصوصية في نظامك."
-    },
-    "noInputDeviceTitle": "لم يتم العثور على ميكروفون",
-    "noInputDevice": "لم يتم اكتشاف أي جهاز إدخال صوتي. يرجى توصيل ميكروفون أو سماعة رأس والمحاولة مرة أخرى.",
-    "recordingFailed": "فشل في بدء التسجيل: {{error}}",
     "modelLoadFailed": "فشل في تحميل النموذج: {{model}}",
     "modelLoadFailedUnknown": "نموذج غير معروف",
     "pasteFailedTitle": "فشل لصق النص",

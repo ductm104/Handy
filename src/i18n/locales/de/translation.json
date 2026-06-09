@@ -97,26 +97,6 @@
     "errors": {
       "loadModels": "Verfügbare Modelle konnten nicht geladen werden",
       "downloadModel": "Modell konnte nicht heruntergeladen werden: {{error}}"
-    },
-    "permissions": {
-      "title": "Berechtigungen erforderlich",
-      "description": "Handy benötigt einige Berechtigungen, um richtig zu funktionieren.",
-      "microphone": {
-        "title": "Mikrofonzugriff",
-        "description": "Erforderlich, um deine Stimme für die Transkription zu hören."
-      },
-      "accessibility": {
-        "title": "Bedienungshilfen-Zugriff",
-        "description": "Erforderlich, um transkribierten Text in deine Anwendungen einzugeben."
-      },
-      "grant": "Berechtigung erteilen",
-      "granted": "Erteilt",
-      "waiting": "Warten...",
-      "allGranted": "Alles bereit!",
-      "errors": {
-        "checkFailed": "Berechtigungsprüfung fehlgeschlagen. Bitte erneut versuchen.",
-        "requestFailed": "Berechtigungsanfrage fehlgeschlagen. Bitte erneut versuchen."
-      }
     }
   },
   "modelSelector": {
@@ -151,6 +131,31 @@
     "cancelDownload": "Download abbrechen"
   },
   "settings": {
+    "fileTranscription": {
+      "title": "File Transcription",
+      "description": "Choose an audio or video file and transcribe its audio with the selected local model.",
+      "selectTitle": "Select an audio or video file",
+      "selectDescription": "Use MP3, MP4, M4A, AAC, WAV, FLAC, or OGG files.",
+      "supportedFormats": "Supported: MP3, MP4, M4A, AAC, WAV, FLAC, OGG",
+      "selectFile": "Select File",
+      "changeFile": "Change File",
+      "removeFile": "Remove File",
+      "transcribe": "Transcribe File",
+      "transcribing": "Transcribing...",
+      "outputTitle": "Transcript",
+      "outputPlaceholder": "The transcription will appear here.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "success": "File transcription complete",
+      "noModel": "Download and select a transcription model before transcribing a file.",
+      "fileFilterName": "Media files",
+      "errors": {
+        "noFile": "Select a file first.",
+        "noModel": "No downloaded transcription model is selected.",
+        "transcribe": "Failed to transcribe file.",
+        "copy": "Failed to copy transcription."
+      }
+    },
     "modelSettings": {
       "title": "{{model}}-Einstellungen",
       "noSettingsNeeded": "Dieses Modell funktioniert automatisch ohne Konfiguration."
@@ -420,9 +425,9 @@
     },
     "history": {
       "title": "Verlauf",
-      "openFolder": "Aufnahmeordner öffnen",
+      "openFolder": "Open Audio Folder",
       "loading": "Verlauf wird geladen...",
-      "empty": "Noch keine Transkriptionen. Starte eine Aufnahme, um deinen Verlauf aufzubauen!",
+      "empty": "No file transcriptions yet. Select a file to build your history!",
       "copyToClipboard": "Transkription in Zwischenablage kopieren",
       "save": "Transkription speichern",
       "unsave": "Aus Gespeicherten entfernen",
@@ -461,8 +466,8 @@
         "entries": "Einträge"
       },
       "recordingRetention": {
-        "title": "Aufnahmen automatisch löschen",
-        "description": "Alte Aufnahmen automatisch löschen, um Speicherplatz zu sparen",
+        "title": "Auto-Delete Audio Files",
+        "description": "Automatically delete old saved audio files to save space",
         "never": "Nie",
         "preserveLimit": "Neueste {{count}} behalten",
         "days3": "Nach 3 Tagen",
@@ -553,7 +558,7 @@
     "preparing": "Wird vorbereitet...",
     "checkForUpdates": "Nach Updates suchen",
     "portableUpdateTitle": "Manuelles Update erforderlich",
-    "portableUpdateMessage": "Portable Installationen können nicht automatisch aktualisiert werden. Zum Aktualisieren: Lade den neuesten NSIS-Installer von GitHub Releases herunter, installiere ihn im selben Ordner und kopiere dann deinen Data/-Ordner (Einstellungen, Modelle, Aufnahmen) von der alten Version in die neue.",
+    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, saved audio) from the old version to the new one.",
     "portableUpdateButton": "GitHub Releases öffnen"
   },
   "common": {
@@ -578,24 +583,8 @@
     "no": "Nein",
     "noOptionsFound": "Keine Optionen gefunden"
   },
-  "accessibility": {
-    "permissionsRequired": "Bedienungshilfen-Berechtigungen erforderlich",
-    "permissionsDescription": "Handy benötigt Bedienungshilfen-Berechtigungen, um transkribierten Text einzugeben.",
-    "openSettings": "Systemeinstellungen öffnen",
-    "dismiss": "Schließen"
-  },
   "errors": {
     "loadDirectory": "Fehler beim Laden des Verzeichnisses: {{error}}",
-    "micPermissionDeniedTitle": "Mikrofonzugriff verweigert",
-    "micPermissionDenied": {
-      "generic": "Der Mikrofonzugriff wurde vom Betriebssystem verweigert. Bitte erteile die Mikrofonberechtigung in deinen Systemeinstellungen.",
-      "windows": "Aktiviere den Mikrofonzugriff unter Einstellungen → Datenschutz und Sicherheit → Mikrofon (einschließlich Desktop-App-Zugriff).",
-      "macos": "Erteile den Mikrofonzugriff in Systemeinstellungen → Datenschutz & Sicherheit → Mikrofon.",
-      "linux": "Erteile den Mikrofonzugriff in den Sound- oder Datenschutzeinstellungen deines Systems."
-    },
-    "noInputDeviceTitle": "Kein Mikrofon gefunden",
-    "noInputDevice": "Es wurde kein Audio-Eingabegerät erkannt. Bitte schließe ein Mikrofon oder Headset an und versuche es erneut.",
-    "recordingFailed": "Aufnahme konnte nicht gestartet werden: {{error}}",
     "modelLoadFailed": "Modell konnte nicht geladen werden: {{model}}",
     "modelLoadFailedUnknown": "unbekanntes Modell",
     "pasteFailedTitle": "Text konnte nicht eingefügt werden",
