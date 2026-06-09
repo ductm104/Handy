@@ -11,6 +11,7 @@ RUN_CLEAN=false
 RUN_DEV=false
 RUN_DMG=false
 RUN_UPDATER_ARTIFACTS=false
+RUN_DEPLOY=false
 
 require_command() {
   if ! command -v "$1" >/dev/null 2>&1; then
@@ -45,13 +46,24 @@ while [[ $# -gt 0 ]]; do
       RUN_UPDATER_ARTIFACTS=true
       shift
       ;;
+    --deploy)
+      RUN_DEPLOY=true
+      shift
+      ;;
     *)
       echo "Unknown option: $1" >&2
-      echo "Usage: ./build.sh [--install] [--clean] [--dev] [--dmg] [--updater-artifacts]" >&2
+      echo "Usage: ./build.sh [--install] [--clean] [--dev] [--dmg] [--updater-artifacts] [--deploy]" >&2
       exit 1
       ;;
   esac
 done
+
+if [[ "$RUN_DEPLOY" == true ]]; then
+  RUN_INSTALL=true
+  RUN_CLEAN=true
+  RUN_DMG=true
+  RUN_UPDATER_ARTIFACTS=true
+fi
 
 mkdir -p "$MODEL_DIR"
 
@@ -97,7 +109,9 @@ else
     TAURI_BUILD_ARGS+=(--config '{"bundle":{"createUpdaterArtifacts":false}}')
   fi
 
-  if [[ "$RUN_DMG" == true ]]; then
+  if [[ "$RUN_DEPLOY" == true ]]; then
+    echo "Starting Tauri deploy build (clean + install + app + dmg + updater artifacts)..."
+  elif [[ "$RUN_DMG" == true ]]; then
     echo "Starting Tauri production build with app and DMG bundles..."
   else
     echo "Starting Tauri production build with app bundle..."

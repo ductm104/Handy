@@ -149,6 +149,14 @@
       "success": "File transcription complete",
       "noModel": "Download and select a transcription model before transcribing a file.",
       "fileFilterName": "Media files",
+      "progress": {
+        "loadingModel": "Loading model...",
+        "decoding": "Decoding media...",
+        "transcribing": "Transcribing...",
+        "postProcessing": "Post-processing...",
+        "complete": "Complete",
+        "withPercentage": "{{label}} {{progress}}%"
+      },
       "errors": {
         "noFile": "Select a file first.",
         "noModel": "No downloaded transcription model is selected.",

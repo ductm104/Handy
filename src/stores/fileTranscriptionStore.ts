@@ -1,5 +1,19 @@
 import { create } from "zustand";
+import { listen } from "@tauri-apps/api/event";
 import { commands, type FileTranscriptionResult } from "@/bindings";
+
+type FileTranscriptionProgressStage =
+  | "loading_model"
+  | "decoding"
+  | "transcribing"
+  | "post_processing"
+  | "complete";
+
+interface FileTranscriptionProgressEvent {
+  stage: FileTranscriptionProgressStage;
+  text: string | null;
+  progress: number | null;
+}
 
 type TranscriptionResponse =
   | { status: "ok"; data: FileTranscriptionResult }
@@ -10,6 +24,9 @@ type TranscriptionResponse =
 interface FileTranscriptionStore {
   selectedPath: string | null;
   result: FileTranscriptionResult | null;
+  partialText: string;
+  progress: number | null;
+  progressStage: FileTranscriptionProgressStage | null;
   isTranscribing: boolean;
   error: string | null;
   setSelectedPath: (path: string) => void;
@@ -23,17 +40,34 @@ export const useFileTranscriptionStore = create<FileTranscriptionStore>()(
   (set, get) => ({
     selectedPath: null,
     result: null,
+    partialText: "",
+    progress: null,
+    progressStage: null,
     isTranscribing: false,
     error: null,
 
     setSelectedPath: (selectedPath) => {
       if (get().isTranscribing) return;
-      set({ selectedPath, result: null, error: null });
+      set({
+        selectedPath,
+        result: null,
+        partialText: "",
+        progress: null,
+        progressStage: null,
+        error: null,
+      });
     },
 
     clearFile: () => {
       if (get().isTranscribing) return;
-      set({ selectedPath: null, result: null, error: null });
+      set({
+        selectedPath: null,
+        result: null,
+        partialText: "",
+        progress: null,
+        progressStage: null,
+        error: null,
+      });
     },
 
     transcribeSelectedFile: async (postProcess) => {
@@ -47,9 +81,31 @@ export const useFileTranscriptionStore = create<FileTranscriptionStore>()(
         return { status: "no-file" };
       }
 
-      set({ isTranscribing: true, error: null });
+      set({
+        isTranscribing: true,
+        error: null,
+        result: null,
+        partialText: "",
+        progress: null,
+        progressStage: "loading_model",
+      });
+
+      let unlistenProgress: (() => void) | null = null;
 
       try {
+        unlistenProgress = await listen<FileTranscriptionProgressEvent>(
+          "file-transcription-progress",
+          (event) => {
+            const { stage, text, progress } = event.payload;
+
+            set({
+              progressStage: stage,
+              progress,
+              ...(text !== null ? { partialText: text } : {}),
+            });
+          },
+        );
+
         const response = await commands.transcribeFile(
           selectedPath,
           postProcess,
@@ -60,14 +116,20 @@ export const useFileTranscriptionStore = create<FileTranscriptionStore>()(
           return response;
         }
 
-        set({ result: response.data, error: null });
+        set({ result: response.data, partialText: "", error: null });
         return response;
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         set({ error: message });
         return { status: "error", error: message };
       } finally {
-        set({ isTranscribing: false });
+        unlistenProgress?.();
+        set({
+          isTranscribing: false,
+          partialText: "",
+          progress: null,
+          progressStage: null,
+        });
       }
     },
   }),

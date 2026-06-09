@@ -8,13 +8,16 @@ use anyhow::Result;
 use log::{debug, error, info, warn};
 use serde::Serialize;
 use specta::Type;
+use std::ffi::{c_int, c_void, CStr};
 use std::panic::{catch_unwind, AssertUnwindSafe};
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::path::Path;
+use std::sync::atomic::{AtomicBool, AtomicI32, AtomicU64, Ordering};
 use std::sync::{Arc, Condvar, Mutex, MutexGuard, OnceLock};
 use std::thread;
 use std::time::{Duration, SystemTime};
 use tauri::{AppHandle, Emitter, Manager};
 use transcribe_rs::{
+    accel::{get_whisper_accelerator, get_whisper_gpu_device, GPU_DEVICE_AUTO},
     onnx::{
         canary::CanaryModel,
         cohere::CohereModel,
@@ -24,8 +27,11 @@ use transcribe_rs::{
         sense_voice::{SenseVoiceModel, SenseVoiceParams},
         Quantization,
     },
-    whisper_cpp::{WhisperEngine, WhisperInferenceParams},
-    SpeechModel, TranscribeOptions,
+    whisper_cpp::{gpu::auto_select_gpu_device, WhisperInferenceParams},
+    SpeechModel, TranscribeOptions, TranscriptionResult, TranscriptionSegment,
+};
+use whisper_rs::{
+    whisper_rs_sys, FullParams, SamplingStrategy, WhisperContext, WhisperContextParameters,
 };
 
 #[derive(Clone, Debug, Serialize)]
@@ -34,6 +40,232 @@ pub struct ModelStateEvent {
     pub model_id: Option<String>,
     pub model_name: Option<String>,
     pub error: Option<String>,
+}
+
+#[derive(Clone, Debug)]
+pub struct TranscriptionProgress {
+    pub text: Option<String>,
+    pub progress: Option<i32>,
+}
+
+pub type TranscriptionProgressCallback = Arc<dyn Fn(TranscriptionProgress) + Send + Sync>;
+
+struct WhisperEngine {
+    state: whisper_rs::WhisperState,
+    #[allow(dead_code)]
+    context: WhisperContext,
+}
+
+struct WhisperCallbackState {
+    callback: TranscriptionProgressCallback,
+    partial_text: Mutex<String>,
+    last_progress: AtomicI32,
+}
+
+struct WhisperCallbackGuard(*mut WhisperCallbackState);
+
+impl Drop for WhisperCallbackGuard {
+    fn drop(&mut self) {
+        if !self.0.is_null() {
+            unsafe {
+                drop(Box::from_raw(self.0));
+            }
+        }
+    }
+}
+
+unsafe extern "C" fn whisper_progress_callback(
+    _: *mut whisper_rs_sys::whisper_context,
+    _: *mut whisper_rs_sys::whisper_state,
+    progress: c_int,
+    user_data: *mut c_void,
+) {
+    if user_data.is_null() {
+        return;
+    }
+
+    let state = &*(user_data as *const WhisperCallbackState);
+    let previous = state.last_progress.load(Ordering::Relaxed);
+
+    if progress < 100 && progress.saturating_sub(previous) < 2 {
+        return;
+    }
+
+    state.last_progress.store(progress, Ordering::Relaxed);
+    (state.callback)(TranscriptionProgress {
+        text: None,
+        progress: Some(progress),
+    });
+}
+
+unsafe extern "C" fn whisper_segment_callback(
+    _: *mut whisper_rs_sys::whisper_context,
+    state: *mut whisper_rs_sys::whisper_state,
+    n_new: c_int,
+    user_data: *mut c_void,
+) {
+    if user_data.is_null() || state.is_null() || n_new <= 0 {
+        return;
+    }
+
+    let callback_state = &*(user_data as *const WhisperCallbackState);
+    let n_segments = whisper_rs_sys::whisper_full_n_segments_from_state(state);
+    let first_new = n_segments.saturating_sub(n_new);
+
+    let Ok(mut partial_text) = callback_state.partial_text.lock() else {
+        return;
+    };
+
+    for i in first_new..n_segments {
+        let text_ptr = whisper_rs_sys::whisper_full_get_segment_text_from_state(state, i);
+        if text_ptr.is_null() {
+            continue;
+        }
+
+        let segment_text = CStr::from_ptr(text_ptr).to_string_lossy();
+        partial_text.push_str(&segment_text);
+    }
+
+    let text = partial_text.trim().to_string();
+    let progress = callback_state.last_progress.load(Ordering::Relaxed);
+    drop(partial_text);
+
+    (callback_state.callback)(TranscriptionProgress {
+        text: Some(text),
+        progress: (progress >= 0).then_some(progress),
+    });
+}
+
+impl WhisperEngine {
+    fn load(model_path: &Path) -> Result<Self> {
+        if !model_path.exists() {
+            return Err(anyhow::anyhow!(
+                "Whisper model not found: {}",
+                model_path.display()
+            ));
+        }
+
+        let use_gpu = get_whisper_accelerator().use_gpu();
+        let requested_gpu_device = get_whisper_gpu_device();
+        let gpu_device = if !use_gpu {
+            0
+        } else if requested_gpu_device == GPU_DEVICE_AUTO {
+            auto_select_gpu_device()
+        } else {
+            info!("Using user-selected GPU device {}", requested_gpu_device);
+            requested_gpu_device
+        };
+
+        let mut context_params = WhisperContextParameters::default();
+        context_params.use_gpu = use_gpu;
+        context_params.flash_attn = true;
+        context_params.gpu_device = gpu_device;
+
+        let context = WhisperContext::new_with_params(model_path, context_params)
+            .map_err(|e| anyhow::anyhow!("Failed to initialize Whisper context: {}", e))?;
+        let state = context
+            .create_state()
+            .map_err(|e| anyhow::anyhow!("Failed to initialize Whisper state: {}", e))?;
+
+        Ok(Self { state, context })
+    }
+
+    fn transcribe_with(
+        &mut self,
+        samples: &[f32],
+        params: &WhisperInferenceParams,
+    ) -> Result<TranscriptionResult> {
+        self.infer(samples, params, None)
+    }
+
+    fn transcribe_with_progress(
+        &mut self,
+        samples: &[f32],
+        params: &WhisperInferenceParams,
+        progress_callback: Option<TranscriptionProgressCallback>,
+    ) -> Result<TranscriptionResult> {
+        self.infer(samples, params, progress_callback)
+    }
+
+    fn infer(
+        &mut self,
+        samples: &[f32],
+        params: &WhisperInferenceParams,
+        progress_callback: Option<TranscriptionProgressCallback>,
+    ) -> Result<TranscriptionResult> {
+        let mut full_params = FullParams::new(SamplingStrategy::BeamSearch {
+            beam_size: 3,
+            patience: -1.0,
+        });
+        full_params.set_language(params.language.as_deref());
+        full_params.set_translate(params.translate);
+        full_params.set_print_special(params.print_special);
+        full_params.set_print_progress(params.print_progress);
+        full_params.set_print_realtime(params.print_realtime);
+        full_params.set_print_timestamps(params.print_timestamps);
+        full_params.set_suppress_blank(params.suppress_blank);
+        full_params.set_suppress_nst(params.suppress_non_speech_tokens);
+        full_params.set_no_speech_thold(params.no_speech_thold);
+        if params.n_threads > 0 {
+            full_params.set_n_threads(params.n_threads);
+        }
+
+        if let Some(ref prompt) = params.initial_prompt {
+            full_params.set_initial_prompt(prompt);
+        }
+
+        let _callback_guard = if let Some(callback) = progress_callback {
+            let callback_state = Box::new(WhisperCallbackState {
+                callback,
+                partial_text: Mutex::new(String::new()),
+                last_progress: AtomicI32::new(-1),
+            });
+            let callback_state = Box::into_raw(callback_state);
+
+            unsafe {
+                full_params.set_progress_callback(Some(whisper_progress_callback));
+                full_params.set_progress_callback_user_data(callback_state as *mut c_void);
+                full_params.set_new_segment_callback(Some(whisper_segment_callback));
+                full_params.set_new_segment_callback_user_data(callback_state as *mut c_void);
+            }
+
+            Some(WhisperCallbackGuard(callback_state))
+        } else {
+            None
+        };
+
+        self.state
+            .full(full_params, samples)
+            .map_err(|e| anyhow::anyhow!("Whisper inference failed: {}", e))?;
+
+        let num_segments = self.state.full_n_segments();
+        let mut segments = Vec::new();
+        let mut full_text = String::new();
+
+        for i in 0..num_segments {
+            let segment = self
+                .state
+                .get_segment(i)
+                .ok_or_else(|| anyhow::anyhow!("Whisper segment {} out of bounds", i))?;
+            let text = segment
+                .to_str()
+                .map_err(|e| anyhow::anyhow!("Invalid Whisper segment text: {}", e))?;
+            let start = segment.start_timestamp() as f32 / 100.0;
+            let end = segment.end_timestamp() as f32 / 100.0;
+
+            segments.push(TranscriptionSegment {
+                start,
+                end,
+                text: text.to_string(),
+            });
+            full_text.push_str(text);
+        }
+
+        Ok(TranscriptionResult {
+            text: full_text.trim().to_string(),
+            segments: Some(segments),
+        })
+    }
 }
 
 enum LoadedEngine {
@@ -438,6 +670,22 @@ impl TranscriptionManager {
     }
 
     pub fn transcribe(&self, audio: Vec<f32>) -> Result<String> {
+        self.transcribe_inner(audio, None)
+    }
+
+    pub fn transcribe_with_progress(
+        &self,
+        audio: Vec<f32>,
+        progress_callback: Option<TranscriptionProgressCallback>,
+    ) -> Result<String> {
+        self.transcribe_inner(audio, progress_callback)
+    }
+
+    fn transcribe_inner(
+        &self,
+        audio: Vec<f32>,
+        progress_callback: Option<TranscriptionProgressCallback>,
+    ) -> Result<String> {
         #[cfg(debug_assertions)]
         if std::env::var("HANDY_FORCE_TRANSCRIPTION_FAILURE").is_ok() {
             return Err(anyhow::anyhow!(
@@ -551,9 +799,19 @@ impl TranscriptionManager {
                                 ..Default::default()
                             };
 
-                            whisper_engine
-                                .transcribe_with(&audio, &params)
-                                .map_err(|e| anyhow::anyhow!("Whisper transcription failed: {}", e))
+                            if let Some(callback) = progress_callback.clone() {
+                                whisper_engine
+                                    .transcribe_with_progress(&audio, &params, Some(callback))
+                                    .map_err(|e| {
+                                        anyhow::anyhow!("Whisper transcription failed: {}", e)
+                                    })
+                            } else {
+                                whisper_engine
+                                    .transcribe_with(&audio, &params)
+                                    .map_err(|e| {
+                                        anyhow::anyhow!("Whisper transcription failed: {}", e)
+                                    })
+                            }
                         }
                         LoadedEngine::Parakeet(parakeet_engine) => {
                             let params = ParakeetParams {
