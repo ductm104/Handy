@@ -1,7 +1,6 @@
 {
   "tray": {
     "settings": "Configuración...",
-    "checkUpdates": "Buscar actualizaciones...",
     "copyLastTranscript": "Copiar la última transcripción",
     "unloadModel": "Descargar modelo",
     "model": "Modelo",
@@ -456,10 +455,6 @@
         "title": "Nivel de Registro",
         "description": "Establece el nivel de detalle del registro"
       },
-      "updateChecks": {
-        "label": "Buscar Actualizaciones",
-        "description": "Buscar automáticamente nuevas versiones de Handy"
-      },
       "soundTheme": {
         "label": "Tema de Sonido",
         "description": "Elige un tema de sonido para la retroalimentación de inicio y parada de grabación"
@@ -554,20 +549,8 @@
   },
   "footer": {
     "downloadingModel": "Descargando {{model}}...",
-    "checkingUpdates": "Buscando actualizaciones...",
-    "updateAvailable": "Actualización disponible: {{version}}",
-    "updateAvailableShort": "Actualización disponible",
-    "upToDate": "Actualizado",
-    "downloadUpdate": "Descargar Actualización",
     "restart": "Reiniciar",
-    "updateCheckingDisabled": "Búsqueda de Actualizaciones Deshabilitada",
-    "downloading": "Descargando... {{progress}}%",
-    "installing": "Instalando...",
-    "preparing": "Preparando...",
-    "checkForUpdates": "Buscar actualizaciones",
-    "portableUpdateTitle": "Manual update required",
-    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, saved audio) from the old version to the new one.",
-    "portableUpdateButton": "Open GitHub Releases"
+    "downloading": "Descargando... {{progress}}%"
   },
   "common": {
     "loading": "Cargando...",

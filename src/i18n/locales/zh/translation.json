@@ -1,7 +1,6 @@
 {
   "tray": {
     "settings": "设置...",
-    "checkUpdates": "检查更新...",
     "copyLastTranscript": "复制最新转录",
     "unloadModel": "卸载模型",
     "model": "模型",
@@ -456,10 +455,6 @@
         "title": "日志级别",
         "description": "设置日志的详细程度"
       },
-      "updateChecks": {
-        "label": "检查更新",
-        "description": "自动检查 Handy 的新版本"
-      },
       "soundTheme": {
         "label": "声音主题",
         "description": "选择录制开始和停止反馈的声音主题"
@@ -554,20 +549,8 @@
   },
   "footer": {
     "downloadingModel": "正在下载 {{model}}...",
-    "checkingUpdates": "检查更新中...",
-    "updateAvailable": "有可用更新: {{version}}",
-    "updateAvailableShort": "有可用更新",
-    "upToDate": "已是最新版本",
-    "downloadUpdate": "下载更新",
     "restart": "重启",
-    "updateCheckingDisabled": "更新检查已禁用",
-    "downloading": "下载中... {{progress}}%",
-    "installing": "安装中...",
-    "preparing": "准备中...",
-    "checkForUpdates": "检查更新",
-    "portableUpdateTitle": "Manual update required",
-    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, saved audio) from the old version to the new one.",
-    "portableUpdateButton": "Open GitHub Releases"
+    "downloading": "下载中... {{progress}}%"
   },
   "common": {
     "loading": "加载中...",
