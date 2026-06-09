@@ -30,11 +30,12 @@ const HanhCuteTextLogo = ({
         textAnchor="middle"
         className="logo-stroke"
         style={{
-          fontFamily: '"Snell Roundhand", "Brush Script MT", "Apple Chancery", "Palatino", "Georgia", serif',
-          fontWeight: 400,
-          fontStyle: "italic",
-          fontSize: 140,
-          strokeWidth: 6,
+          fontFamily:
+            '"Comic Sans MS", "Chalkboard SE", "Chalkboard", sans-serif',
+          fontWeight: 700,
+          fontStyle: "normal",
+          fontSize: 130,
+          strokeWidth: 5,
         }}
       >
         HanhCute
@@ -46,10 +47,11 @@ const HanhCuteTextLogo = ({
         textAnchor="middle"
         className="logo-primary"
         style={{
-          fontFamily: '"Snell Roundhand", "Brush Script MT", "Apple Chancery", "Palatino", "Georgia", serif',
-          fontWeight: 400,
-          fontStyle: "italic",
-          fontSize: 140,
+          fontFamily:
+            '"Comic Sans MS", "Chalkboard SE", "Chalkboard", sans-serif',
+          fontWeight: 700,
+          fontStyle: "normal",
+          fontSize: 130,
         }}
       >
         HanhCute
