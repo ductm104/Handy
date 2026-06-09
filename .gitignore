@@ -12,6 +12,7 @@ package-lock.json
 node_modules
 dist
 dist-ssr
+.build-cache/
 *.local
 *.local.*
 
