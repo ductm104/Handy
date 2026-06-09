@@ -29,6 +29,9 @@ export const FileTranscriptionPanel: React.FC = () => {
   const {
     selectedPath,
     result,
+    partialText,
+    progress,
+    progressStage,
     isTranscribing,
     setSelectedPath,
     clearFile,
@@ -46,6 +49,31 @@ export const FileTranscriptionPanel: React.FC = () => {
     Boolean(selectedPath) &&
     Boolean(currentModelInfo?.is_downloaded) &&
     !isTranscribing;
+  const outputText = isTranscribing ? partialText : (result?.text ?? "");
+
+  const getProgressLabel = () => {
+    switch (progressStage) {
+      case "loading_model":
+        return t("settings.fileTranscription.progress.loadingModel");
+      case "decoding":
+        return t("settings.fileTranscription.progress.decoding");
+      case "post_processing":
+        return t("settings.fileTranscription.progress.postProcessing");
+      case "complete":
+        return t("settings.fileTranscription.progress.complete");
+      case "transcribing":
+      default:
+        return t("settings.fileTranscription.progress.transcribing");
+    }
+  };
+
+  const progressLabel =
+    isTranscribing && progress !== null
+      ? t("settings.fileTranscription.progress.withPercentage", {
+          label: getProgressLabel(),
+          progress,
+        })
+      : getProgressLabel();
 
   const handleSelectFile = async () => {
     const selected = await open({
@@ -201,7 +229,7 @@ export const FileTranscriptionPanel: React.FC = () => {
             variant="ghost"
             size="sm"
             onClick={handleCopy}
-            disabled={!result?.text}
+            disabled={isTranscribing || !result?.text}
           >
             {copied ? (
               <Check size={14} className="me-1" />
@@ -213,10 +241,17 @@ export const FileTranscriptionPanel: React.FC = () => {
               : t("settings.fileTranscription.copy")}
           </Button>
         </div>
+        {isTranscribing && (
+          <div className="text-xs text-mid-gray">{progressLabel}</div>
+        )}
         <Textarea
           readOnly
-          value={result?.text ?? ""}
-          placeholder={t("settings.fileTranscription.outputPlaceholder")}
+          value={outputText}
+          placeholder={
+            isTranscribing
+              ? progressLabel
+              : t("settings.fileTranscription.outputPlaceholder")
+          }
           className="w-full min-h-44 select-text font-normal"
         />
       </div>
