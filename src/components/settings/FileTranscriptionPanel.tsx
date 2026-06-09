@@ -5,8 +5,8 @@ import { Check, Clipboard, FileAudio, Loader2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "../ui/Button";
 import { Textarea } from "../ui/Textarea";
-import { commands, type FileTranscriptionResult } from "@/bindings";
 import { useSettings } from "@/hooks/useSettings";
+import { useFileTranscriptionStore } from "@/stores/fileTranscriptionStore";
 import { useModelStore } from "@/stores/modelStore";
 
 const MEDIA_EXTENSIONS = [
@@ -26,9 +26,14 @@ export const FileTranscriptionPanel: React.FC = () => {
   const { t } = useTranslation();
   const { settings } = useSettings();
   const { currentModel, models } = useModelStore();
-  const [selectedPath, setSelectedPath] = useState<string | null>(null);
-  const [result, setResult] = useState<FileTranscriptionResult | null>(null);
-  const [isTranscribing, setIsTranscribing] = useState(false);
+  const {
+    selectedPath,
+    result,
+    isTranscribing,
+    setSelectedPath,
+    clearFile,
+    transcribeSelectedFile,
+  } = useFileTranscriptionStore();
   const [copied, setCopied] = useState(false);
 
   const selectedFileName = useMemo(
@@ -56,13 +61,11 @@ export const FileTranscriptionPanel: React.FC = () => {
     if (typeof selected !== "string") return;
 
     setSelectedPath(selected);
-    setResult(null);
     setCopied(false);
   };
 
   const handleClearFile = () => {
-    setSelectedPath(null);
-    setResult(null);
+    clearFile();
     setCopied(false);
   };
 
@@ -77,29 +80,30 @@ export const FileTranscriptionPanel: React.FC = () => {
       return;
     }
 
-    setIsTranscribing(true);
     setCopied(false);
 
-    try {
-      const response = await commands.transcribeFile(
-        selectedPath,
-        settings?.post_process_enabled ?? false,
-      );
+    const response = await transcribeSelectedFile(
+      settings?.post_process_enabled ?? false,
+    );
 
-      if (response.status === "error") {
-        throw new Error(response.error);
-      }
-
-      setResult(response.data);
+    if (response.status === "ok") {
       toast.success(t("settings.fileTranscription.success"));
-    } catch (error) {
-      console.error("Failed to transcribe file:", error);
-      toast.error(t("settings.fileTranscription.errors.transcribe"), {
-        description: error instanceof Error ? error.message : String(error),
-      });
-    } finally {
-      setIsTranscribing(false);
+      return;
     }
+
+    if (response.status === "busy") {
+      return;
+    }
+
+    if (response.status === "no-file") {
+      toast.error(t("settings.fileTranscription.errors.noFile"));
+      return;
+    }
+
+    console.error("Failed to transcribe file:", response.error);
+    toast.error(t("settings.fileTranscription.errors.transcribe"), {
+      description: response.error,
+    });
   };
 
   const handleCopy = async () => {

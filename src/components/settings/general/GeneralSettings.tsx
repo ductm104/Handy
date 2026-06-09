@@ -9,13 +9,13 @@ export const GeneralSettings: React.FC = () => {
 
   return (
     <div className="max-w-3xl w-full mx-auto space-y-6">
+      <ModelSettingsCard />
       <SettingsGroup
         title={t("settings.fileTranscription.title")}
         description={t("settings.fileTranscription.description")}
       >
         <FileTranscriptionPanel />
       </SettingsGroup>
-      <ModelSettingsCard />
     </div>
   );
 };
