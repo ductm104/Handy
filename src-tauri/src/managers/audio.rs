@@ -159,12 +159,7 @@ impl AudioRecordingManager {
     /* ---------- construction ------------------------------------------------ */
 
     pub fn new(app: &tauri::AppHandle) -> Result<Self, anyhow::Error> {
-        let settings = get_settings(app);
-        let mode = if settings.always_on_microphone {
-            MicrophoneMode::AlwaysOn
-        } else {
-            MicrophoneMode::OnDemand
-        };
+        let mode = MicrophoneMode::OnDemand;
 
         let manager = Self {
             state: Arc::new(Mutex::new(RecordingState::Idle)),
@@ -177,11 +172,6 @@ impl AudioRecordingManager {
             did_mute: Arc::new(Mutex::new(false)),
             close_generation: Arc::new(AtomicU64::new(0)),
         };
-
-        // Always-on?  Open immediately.
-        if matches!(mode, MicrophoneMode::AlwaysOn) {
-            manager.start_microphone_stream()?;
-        }
 
         Ok(manager)
     }

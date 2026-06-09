@@ -38,12 +38,12 @@ const IconButton: React.FC<{
 
 const PAGE_SIZE = 30;
 
-interface OpenRecordingsButtonProps {
+interface OpenAudioFolderButtonProps {
   onClick: () => void;
   label: string;
 }
 
-const OpenRecordingsButton: React.FC<OpenRecordingsButtonProps> = ({
+const OpenAudioFolderButton: React.FC<OpenAudioFolderButtonProps> = ({
   onClick,
   label,
 }) => (
@@ -223,14 +223,14 @@ export const HistorySettings: React.FC = () => {
     }
   };
 
-  const openRecordingsFolder = async () => {
+  const openAudioFolder = async () => {
     try {
       const result = await commands.openRecordingsFolder();
       if (result.status !== "ok") {
         throw new Error(String(result.error));
       }
     } catch (error) {
-      console.error("Failed to open recordings folder:", error);
+      console.error("Failed to open saved audio folder:", error);
     }
   };
 
@@ -279,8 +279,8 @@ export const HistorySettings: React.FC = () => {
               {t("settings.history.title")}
             </h2>
           </div>
-          <OpenRecordingsButton
-            onClick={openRecordingsFolder}
+          <OpenAudioFolderButton
+            onClick={openAudioFolder}
             label={t("settings.history.openFolder")}
           />
         </div>

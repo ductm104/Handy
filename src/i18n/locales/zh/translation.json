@@ -97,26 +97,6 @@
     "errors": {
       "loadModels": "无法加载可用模型",
       "downloadModel": "模型下载失败: {{error}}"
-    },
-    "permissions": {
-      "title": "需要权限",
-      "description": "Handy 需要一些权限才能正常工作。",
-      "microphone": {
-        "title": "麦克风访问",
-        "description": "需要听取您的语音进行转录。"
-      },
-      "accessibility": {
-        "title": "辅助功能访问",
-        "description": "需要将转录文本输入到您的应用程序中。"
-      },
-      "grant": "授予权限",
-      "granted": "已授予",
-      "waiting": "等待中...",
-      "allGranted": "全部完成！",
-      "errors": {
-        "checkFailed": "检查权限失败。请重试。",
-        "requestFailed": "请求权限失败。请重试。"
-      }
     }
   },
   "modelSelector": {
@@ -151,6 +131,31 @@
     "cancelDownload": "取消下载"
   },
   "settings": {
+    "fileTranscription": {
+      "title": "File Transcription",
+      "description": "Choose an audio or video file and transcribe its audio with the selected local model.",
+      "selectTitle": "Select an audio or video file",
+      "selectDescription": "Use MP3, MP4, M4A, AAC, WAV, FLAC, or OGG files.",
+      "supportedFormats": "Supported: MP3, MP4, M4A, AAC, WAV, FLAC, OGG",
+      "selectFile": "Select File",
+      "changeFile": "Change File",
+      "removeFile": "Remove File",
+      "transcribe": "Transcribe File",
+      "transcribing": "Transcribing...",
+      "outputTitle": "Transcript",
+      "outputPlaceholder": "The transcription will appear here.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "success": "File transcription complete",
+      "noModel": "Download and select a transcription model before transcribing a file.",
+      "fileFilterName": "Media files",
+      "errors": {
+        "noFile": "Select a file first.",
+        "noModel": "No downloaded transcription model is selected.",
+        "transcribe": "Failed to transcribe file.",
+        "copy": "Failed to copy transcription."
+      }
+    },
     "modelSettings": {
       "title": "{{model}} 设置",
       "noSettingsNeeded": "此模型自动运行，无需配置。"
@@ -420,9 +425,9 @@
     },
     "history": {
       "title": "历史记录",
-      "openFolder": "打开录音文件夹",
+      "openFolder": "Open Audio Folder",
       "loading": "加载历史记录中...",
-      "empty": "还没有转录记录。开始录制以建立您的历史记录！",
+      "empty": "No file transcriptions yet. Select a file to build your history!",
       "copyToClipboard": "复制转录到剪贴板",
       "save": "保存转录",
       "unsave": "从已保存中移除",
@@ -461,8 +466,8 @@
         "entries": "条"
       },
       "recordingRetention": {
-        "title": "自动删除录音",
-        "description": "自动删除旧录音以节省空间",
+        "title": "Auto-Delete Audio Files",
+        "description": "Automatically delete old saved audio files to save space",
         "never": "从不",
         "preserveLimit": "保留最新 {{count}} 条",
         "days3": "3 天后",
@@ -553,7 +558,7 @@
     "preparing": "准备中...",
     "checkForUpdates": "检查更新",
     "portableUpdateTitle": "Manual update required",
-    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, recordings) from the old version to the new one.",
+    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, saved audio) from the old version to the new one.",
     "portableUpdateButton": "Open GitHub Releases"
   },
   "common": {
@@ -578,24 +583,8 @@
     "no": "否",
     "noOptionsFound": "未找到选项"
   },
-  "accessibility": {
-    "permissionsRequired": "需要辅助功能权限",
-    "permissionsDescription": "Handy 需要辅助功能权限才能输入转录的文字。",
-    "openSettings": "打开系统设置",
-    "dismiss": "关闭"
-  },
   "errors": {
     "loadDirectory": "加载目录时出错: {{error}}",
-    "micPermissionDeniedTitle": "麦克风访问被拒绝",
-    "micPermissionDenied": {
-      "generic": "操作系统拒绝了麦克风访问。请在系统设置中授予麦克风权限。",
-      "windows": "在设置 → 隐私和安全性 → 麦克风（包括桌面应用访问）中启用麦克风访问。",
-      "macos": "在系统设置 → 隐私与安全性 → 麦克风中授予麦克风访问权限。",
-      "linux": "在系统的声音或隐私设置中授予麦克风访问权限。"
-    },
-    "noInputDeviceTitle": "未找到麦克风",
-    "noInputDevice": "未检测到音频输入设备。请连接麦克风或耳机后重试。",
-    "recordingFailed": "录音启动失败: {{error}}",
     "modelLoadFailed": "加载模型失败: {{model}}",
     "modelLoadFailedUnknown": "未知模型",
     "pasteFailedTitle": "粘贴文本失败",

@@ -97,26 +97,6 @@
     "errors": {
       "loadModels": "無法載入可用模型",
       "downloadModel": "模型下載失敗: {{error}}"
-    },
-    "permissions": {
-      "title": "需要權限",
-      "description": "Handy 需要一些權限才能正常運作",
-      "microphone": {
-        "title": "麥克風存取",
-        "description": "需要聽取您的語音進行轉錄"
-      },
-      "accessibility": {
-        "title": "輔助使用存取",
-        "description": "需要將轉錄文字輸入到您的應用程式中"
-      },
-      "grant": "授予權限",
-      "granted": "已授予",
-      "waiting": "等待中...",
-      "allGranted": "全部完成！",
-      "errors": {
-        "checkFailed": "檢查權限失敗，請重試",
-        "requestFailed": "請求權限失敗，請重試"
-      }
     }
   },
   "modelSelector": {
@@ -151,6 +131,31 @@
     }
   },
   "settings": {
+    "fileTranscription": {
+      "title": "File Transcription",
+      "description": "Choose an audio or video file and transcribe its audio with the selected local model.",
+      "selectTitle": "Select an audio or video file",
+      "selectDescription": "Use MP3, MP4, M4A, AAC, WAV, FLAC, or OGG files.",
+      "supportedFormats": "Supported: MP3, MP4, M4A, AAC, WAV, FLAC, OGG",
+      "selectFile": "Select File",
+      "changeFile": "Change File",
+      "removeFile": "Remove File",
+      "transcribe": "Transcribe File",
+      "transcribing": "Transcribing...",
+      "outputTitle": "Transcript",
+      "outputPlaceholder": "The transcription will appear here.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "success": "File transcription complete",
+      "noModel": "Download and select a transcription model before transcribing a file.",
+      "fileFilterName": "Media files",
+      "errors": {
+        "noFile": "Select a file first.",
+        "noModel": "No downloaded transcription model is selected.",
+        "transcribe": "Failed to transcribe file.",
+        "copy": "Failed to copy transcription."
+      }
+    },
     "modelSettings": {
       "title": "{{model}} 設定",
       "noSettingsNeeded": "此模型自動運行，無需設定"
@@ -420,9 +425,9 @@
     },
     "history": {
       "title": "歷史紀錄",
-      "openFolder": "開啟錄音資料夾",
+      "openFolder": "Open Audio Folder",
       "loading": "載入歷史紀錄中...",
-      "empty": "還沒有轉錄紀錄。開始錄製以建立您的歷史紀錄！",
+      "empty": "No file transcriptions yet. Select a file to build your history!",
       "copyToClipboard": "複製轉錄到剪貼簿",
       "save": "儲存轉錄",
       "unsave": "從已儲存中移除",
@@ -461,8 +466,8 @@
         "entries": "筆"
       },
       "recordingRetention": {
-        "title": "自動刪除錄音",
-        "description": "自動刪除舊錄音以節省空間",
+        "title": "Auto-Delete Audio Files",
+        "description": "Automatically delete old saved audio files to save space",
         "never": "從不",
         "preserveLimit": "保留最新 {{count}} 筆",
         "days3": "3 天後",
@@ -553,7 +558,7 @@
     "preparing": "準備中...",
     "checkForUpdates": "檢查更新",
     "portableUpdateTitle": "Manual update required",
-    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, recordings) from the old version to the new one.",
+    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, saved audio) from the old version to the new one.",
     "portableUpdateButton": "Open GitHub Releases"
   },
   "common": {
@@ -578,24 +583,8 @@
     "no": "否",
     "noOptionsFound": "未找到選項"
   },
-  "accessibility": {
-    "permissionsRequired": "需要輔助使用權限",
-    "permissionsDescription": "Handy 需要輔助使用權限才能輸入轉錄的文字",
-    "openSettings": "開啟系統設定",
-    "dismiss": "關閉"
-  },
   "errors": {
     "loadDirectory": "載入目錄時發生錯誤: {{error}}",
-    "micPermissionDeniedTitle": "麥克風存取被拒絕",
-    "micPermissionDenied": {
-      "generic": "作業系統拒絕了麥克風存取。請在系統設定中授予麥克風權限。",
-      "windows": "在設定 → 隱私與安全性 → 麥克風（包括桌面應用程式存取）中啟用麥克風存取。",
-      "macos": "在系統設定 → 隱私與安全性 → 麥克風中授予麥克風存取權限。",
-      "linux": "在系統的聲音或隱私設定中授予麥克風存取權限。"
-    },
-    "noInputDeviceTitle": "找不到麥克風",
-    "noInputDevice": "未偵測到音訊輸入裝置。請連接麥克風或耳機後重試。",
-    "recordingFailed": "錄音啟動失敗: {{error}}",
     "modelLoadFailed": "載入模型失敗: {{model}}",
     "modelLoadFailedUnknown": "未知模型",
     "pasteFailedTitle": "貼上文字失敗",

@@ -97,26 +97,6 @@
     "errors": {
       "loadModels": "Error al cargar los modelos disponibles",
       "downloadModel": "Error al descargar el modelo: {{error}}"
-    },
-    "permissions": {
-      "title": "Permisos Requeridos",
-      "description": "Handy necesita algunos permisos para funcionar correctamente.",
-      "microphone": {
-        "title": "Acceso al Micrófono",
-        "description": "Necesario para escuchar tu voz para la transcripción."
-      },
-      "accessibility": {
-        "title": "Acceso de Accesibilidad",
-        "description": "Necesario para escribir el texto transcrito en tus aplicaciones."
-      },
-      "grant": "Conceder Permiso",
-      "granted": "Concedido",
-      "waiting": "Esperando...",
-      "allGranted": "¡Todo listo!",
-      "errors": {
-        "checkFailed": "Error al verificar permisos. Por favor, inténtalo de nuevo.",
-        "requestFailed": "Error al solicitar permiso. Por favor, inténtalo de nuevo."
-      }
     }
   },
   "modelSelector": {
@@ -151,6 +131,31 @@
     "cancelDownload": "Cancelar descarga"
   },
   "settings": {
+    "fileTranscription": {
+      "title": "File Transcription",
+      "description": "Choose an audio or video file and transcribe its audio with the selected local model.",
+      "selectTitle": "Select an audio or video file",
+      "selectDescription": "Use MP3, MP4, M4A, AAC, WAV, FLAC, or OGG files.",
+      "supportedFormats": "Supported: MP3, MP4, M4A, AAC, WAV, FLAC, OGG",
+      "selectFile": "Select File",
+      "changeFile": "Change File",
+      "removeFile": "Remove File",
+      "transcribe": "Transcribe File",
+      "transcribing": "Transcribing...",
+      "outputTitle": "Transcript",
+      "outputPlaceholder": "The transcription will appear here.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "success": "File transcription complete",
+      "noModel": "Download and select a transcription model before transcribing a file.",
+      "fileFilterName": "Media files",
+      "errors": {
+        "noFile": "Select a file first.",
+        "noModel": "No downloaded transcription model is selected.",
+        "transcribe": "Failed to transcribe file.",
+        "copy": "Failed to copy transcription."
+      }
+    },
     "modelSettings": {
       "title": "Configuración de {{model}}",
       "noSettingsNeeded": "Este modelo funciona automáticamente sin necesidad de configuración."
@@ -420,9 +425,9 @@
     },
     "history": {
       "title": "Historial",
-      "openFolder": "Abrir Carpeta de Grabaciones",
+      "openFolder": "Open Audio Folder",
       "loading": "Cargando historial...",
-      "empty": "Aún no hay transcripciones. ¡Comienza a grabar para crear tu historial!",
+      "empty": "No file transcriptions yet. Select a file to build your history!",
       "copyToClipboard": "Copiar transcripción al portapapeles",
       "save": "Guardar transcripción",
       "unsave": "Eliminar de guardados",
@@ -461,8 +466,8 @@
         "entries": "entradas"
       },
       "recordingRetention": {
-        "title": "Eliminación automática de grabaciones",
-        "description": "Eliminar automáticamente grabaciones antiguas para ahorrar espacio",
+        "title": "Auto-Delete Audio Files",
+        "description": "Automatically delete old saved audio files to save space",
         "never": "Nunca",
         "preserveLimit": "Mantener las últimas {{count}}",
         "days3": "Después de 3 días",
@@ -553,7 +558,7 @@
     "preparing": "Preparando...",
     "checkForUpdates": "Buscar actualizaciones",
     "portableUpdateTitle": "Manual update required",
-    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, recordings) from the old version to the new one.",
+    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, saved audio) from the old version to the new one.",
     "portableUpdateButton": "Open GitHub Releases"
   },
   "common": {
@@ -578,24 +583,8 @@
     "no": "No",
     "noOptionsFound": "No se encontraron opciones"
   },
-  "accessibility": {
-    "permissionsRequired": "Se Requieren Permisos de Accesibilidad",
-    "permissionsDescription": "Handy necesita permisos de accesibilidad para escribir texto transcrito.",
-    "openSettings": "Abrir Ajustes del Sistema",
-    "dismiss": "Descartar"
-  },
   "errors": {
     "loadDirectory": "Error al cargar el directorio: {{error}}",
-    "micPermissionDeniedTitle": "Acceso al micrófono denegado",
-    "micPermissionDenied": {
-      "generic": "El sistema operativo denegó el acceso al micrófono. Por favor, conceda el permiso del micrófono en la configuración del sistema.",
-      "windows": "Active el acceso al micrófono en Configuración → Privacidad y seguridad → Micrófono (incluido el acceso de aplicaciones de escritorio).",
-      "macos": "Conceda el acceso al micrófono en Ajustes del Sistema → Privacidad y seguridad → Micrófono.",
-      "linux": "Conceda el acceso al micrófono en la configuración de sonido o privacidad de su sistema."
-    },
-    "noInputDeviceTitle": "No se encontró micrófono",
-    "noInputDevice": "No se detectó ningún dispositivo de entrada de audio. Conecta un micrófono o auriculares e inténtalo de nuevo.",
-    "recordingFailed": "Error al iniciar la grabación: {{error}}",
     "modelLoadFailed": "Error al cargar el modelo: {{model}}",
     "modelLoadFailedUnknown": "modelo desconocido",
     "pasteFailedTitle": "Error al pegar el texto",

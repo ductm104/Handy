@@ -79,7 +79,7 @@ pub fn open_recordings_folder(app: AppHandle) -> Result<(), String> {
     let path = recordings_dir.to_string_lossy().as_ref().to_string();
     app.opener()
         .open_path(path, None::<String>)
-        .map_err(|e| format!("Failed to open recordings folder: {}", e))?;
+        .map_err(|e| format!("Failed to open saved audio folder: {}", e))?;
 
     Ok(())
 }

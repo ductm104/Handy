@@ -576,10 +576,9 @@ export const useSettingsStore = create<SettingsStore>()(
     initialize: async () => {
       const { refreshSettings, checkCustomSounds, loadDefaultSettings } = get();
 
-      // Note: Audio devices are NOT refreshed here. The frontend (App.tsx)
-      // is responsible for calling refreshAudioDevices/refreshOutputDevices
-      // after onboarding completes. This avoids triggering permission dialogs
-      // on macOS before the user is ready.
+      // File transcription does not need microphone/output device enumeration.
+      // Those lists are only refreshed by legacy settings components if they
+      // are mounted.
       await Promise.all([
         loadDefaultSettings(),
         refreshSettings(),

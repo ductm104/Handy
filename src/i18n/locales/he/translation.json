@@ -97,26 +97,6 @@
     "errors": {
       "loadModels": "טעינת המודלים הזמינים נכשלה",
       "downloadModel": "הורדת המודל נכשלה: {{error}}"
-    },
-    "permissions": {
-      "title": "נדרשות הרשאות",
-      "description": "Handy צריך כמה הרשאות כדי לעבוד כמו שצריך.",
-      "microphone": {
-        "title": "גישה למיקרופון",
-        "description": "נדרש כדי לשמוע את הקול שלך לצורך תמלול."
-      },
-      "accessibility": {
-        "title": "גישת נגישות",
-        "description": "נדרש כדי להקליד את הטקסט המתומלל לתוך האפליקציות שלך."
-      },
-      "grant": "תן הרשאה",
-      "granted": "ניתנה",
-      "waiting": "ממתין...",
-      "allGranted": "הכול מוכן!",
-      "errors": {
-        "checkFailed": "בדיקת ההרשאות נכשלה. נסה שוב.",
-        "requestFailed": "בקשת ההרשאה נכשלה. נסה שוב."
-      }
     }
   },
   "modelSelector": {
@@ -151,6 +131,31 @@
     }
   },
   "settings": {
+    "fileTranscription": {
+      "title": "File Transcription",
+      "description": "Choose an audio or video file and transcribe its audio with the selected local model.",
+      "selectTitle": "Select an audio or video file",
+      "selectDescription": "Use MP3, MP4, M4A, AAC, WAV, FLAC, or OGG files.",
+      "supportedFormats": "Supported: MP3, MP4, M4A, AAC, WAV, FLAC, OGG",
+      "selectFile": "Select File",
+      "changeFile": "Change File",
+      "removeFile": "Remove File",
+      "transcribe": "Transcribe File",
+      "transcribing": "Transcribing...",
+      "outputTitle": "Transcript",
+      "outputPlaceholder": "The transcription will appear here.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "success": "File transcription complete",
+      "noModel": "Download and select a transcription model before transcribing a file.",
+      "fileFilterName": "Media files",
+      "errors": {
+        "noFile": "Select a file first.",
+        "noModel": "No downloaded transcription model is selected.",
+        "transcribe": "Failed to transcribe file.",
+        "copy": "Failed to copy transcription."
+      }
+    },
     "modelSettings": {
       "title": "הגדרות עבור {{model}}",
       "noSettingsNeeded": "המודל הזה עובד אוטומטית ולא דורש הגדרה נוספת."
@@ -420,9 +425,9 @@
     },
     "history": {
       "title": "היסטוריה",
-      "openFolder": "פתח את תיקיית ההקלטות",
+      "openFolder": "Open Audio Folder",
       "loading": "טוען היסטוריה...",
-      "empty": "עדיין אין תמלולים. התחל להקליט כדי לבנות את ההיסטוריה שלך!",
+      "empty": "No file transcriptions yet. Select a file to build your history!",
       "copyToClipboard": "העתק תמלול ללוח",
       "save": "שמור תמלול",
       "unsave": "הסר משמורים",
@@ -461,8 +466,8 @@
         "entries": "רשומות"
       },
       "recordingRetention": {
-        "title": "מחיקה אוטומטית של הקלטות",
-        "description": "מחק הקלטות ישנות אוטומטית כדי לחסוך מקום",
+        "title": "Auto-Delete Audio Files",
+        "description": "Automatically delete old saved audio files to save space",
         "never": "אף פעם",
         "preserveLimit": "שמור את {{count}} האחרונות",
         "days3": "אחרי 3 ימים",
@@ -553,7 +558,7 @@
     "preparing": "מכין...",
     "checkForUpdates": "בדוק עדכונים",
     "portableUpdateTitle": "נדרש עדכון ידני",
-    "portableUpdateMessage": "התקנות ניידות אינן מתעדכנות אוטומטית. כדי לעדכן, הורד את מתקין ה-NSIS האחרון מ-GitHub Releases, התקן לאותה תיקייה, ואז העתק את תיקיית Data/ (הגדרות, מודלים, הקלטות) מהגרסה הישנה לחדשה.",
+    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, saved audio) from the old version to the new one.",
     "portableUpdateButton": "פתח את GitHub Releases"
   },
   "common": {
@@ -578,24 +583,8 @@
     "no": "לא",
     "noOptionsFound": "לא נמצאו אפשרויות"
   },
-  "accessibility": {
-    "permissionsRequired": "נדרשות הרשאות נגישות",
-    "permissionsDescription": "Handy צריך הרשאות נגישות כדי להקליד את הטקסט המתומלל.",
-    "openSettings": "פתח את הגדרות המערכת",
-    "dismiss": "סגור"
-  },
   "errors": {
     "loadDirectory": "שגיאה בטעינת תיקייה: {{error}}",
-    "micPermissionDeniedTitle": "הגישה למיקרופון נדחתה",
-    "micPermissionDenied": {
-      "generic": "מערכת ההפעלה חסמה את הגישה למיקרופון. תן הרשאת מיקרופון בהגדרות המערכת.",
-      "windows": "הפעל גישה למיקרופון ב-Settings > Privacy & security > Microphone, כולל גישה לאפליקציות שולחן עבודה.",
-      "macos": "תן גישה למיקרופון ב-System Settings > Privacy & Security > Microphone.",
-      "linux": "תן גישה למיקרופון דרך הגדרות השמע או הפרטיות במערכת שלך."
-    },
-    "noInputDeviceTitle": "לא נמצא מיקרופון",
-    "noInputDevice": "לא זוהה התקן קלט שמע. חבר מיקרופון או אוזנייה ונסה שוב.",
-    "recordingFailed": "הפעלת ההקלטה נכשלה: {{error}}",
     "modelLoadFailed": "טעינת המודל נכשלה: {{model}}",
     "modelLoadFailedUnknown": "מודל לא ידוע",
     "pasteFailedTitle": "ההדבקה נכשלה",
