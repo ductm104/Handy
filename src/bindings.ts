@@ -737,6 +737,9 @@ async transcribeFile(path: string, postProcess: boolean) : Promise<Result<FileTr
     else return { status: "error", error: e  as any };
 }
 },
+async cancelFileTranscription() : Promise<void> {
+    await TAURI_INVOKE("cancel_file_transcription");
+},
 async getHistoryEntries(cursor: number | null, limit: number | null) : Promise<Result<PaginatedHistory, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("get_history_entries", { cursor, limit }) };

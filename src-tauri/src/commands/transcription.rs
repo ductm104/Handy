@@ -79,6 +79,12 @@ pub fn unload_model_manually(
 
 #[tauri::command]
 #[specta::specta]
+pub fn cancel_file_transcription(transcription_manager: State<'_, Arc<TranscriptionManager>>) {
+    transcription_manager.cancel_file_transcription();
+}
+
+#[tauri::command]
+#[specta::specta]
 pub async fn transcribe_file(
     app: AppHandle,
     transcription_manager: State<'_, Arc<TranscriptionManager>>,
@@ -91,8 +97,14 @@ pub async fn transcribe_file(
         return Err("Selected path is not a file".to_string());
     }
 
+    transcription_manager.reset_file_transcription_cancelled();
+
     emit_file_transcription_progress(&app, "loading_model", None, None);
     transcription_manager.initiate_model_load();
+
+    if transcription_manager.is_file_transcription_cancelled() {
+        return Err("Cancelled".to_string());
+    }
 
     emit_file_transcription_progress(&app, "decoding", None, None);
     let decode_path = source_path.clone();
@@ -103,6 +115,10 @@ pub async fn transcribe_file(
     .map_err(|e| format!("Audio decode task panicked: {}", e))?
     .map_err(|e| format!("Failed to decode media file: {}", e))?;
 
+    if transcription_manager.is_file_transcription_cancelled() {
+        return Err("Cancelled".to_string());
+    }
+
     if samples.is_empty() {
         return Err("Selected file contains no audio samples".to_string());
     }
@@ -110,8 +126,12 @@ pub async fn transcribe_file(
     let samples_for_history = samples.clone();
     let tm = Arc::clone(&transcription_manager);
     let progress_app = app.clone();
+    let cancel_tm = Arc::clone(&transcription_manager);
     let progress_callback: TranscriptionProgressCallback =
         Arc::new(move |progress: TranscriptionProgress| {
+            if cancel_tm.is_file_transcription_cancelled() {
+                return;
+            }
             emit_file_transcription_progress(
                 &progress_app,
                 "transcribing",
@@ -128,6 +148,10 @@ pub async fn transcribe_file(
     .map_err(|e| format!("Transcription task panicked: {}", e))?
     .map_err(|e| e.to_string())?;
 
+    if transcription_manager.is_file_transcription_cancelled() {
+        return Err("Cancelled".to_string());
+    }
+
     emit_file_transcription_progress(&app, "transcribing", Some(raw_text.clone()), Some(100));
     if post_process {
         emit_file_transcription_progress(&app, "post_processing", Some(raw_text.clone()), None);
@@ -135,8 +159,15 @@ pub async fn transcribe_file(
     let processed = process_transcription_output(&app, &raw_text, post_process).await;
     let text = processed.final_text;
 
+    if transcription_manager.is_file_transcription_cancelled() {
+        return Err("Cancelled".to_string());
+    }
+
     let history_entry = {
-        let file_name = format!("hanhcute-file-{}.wav", chrono::Utc::now().timestamp_millis());
+        let file_name = format!(
+            "hanhcute-file-{}.wav",
+            chrono::Utc::now().timestamp_millis()
+        );
         let wav_path = history_manager.recordings_dir().join(&file_name);
         let sample_count = samples_for_history.len();
         let save_result = tauri::async_runtime::spawn_blocking(move || {
@@ -169,6 +200,10 @@ pub async fn transcribe_file(
             }
         }
     };
+
+    if transcription_manager.is_file_transcription_cancelled() {
+        return Err("Cancelled".to_string());
+    }
 
     emit_file_transcription_progress(&app, "complete", Some(text.clone()), Some(100));
 

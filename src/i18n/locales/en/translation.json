@@ -141,6 +141,8 @@
       "removeFile": "Remove File",
       "transcribe": "Transcribe File",
       "transcribing": "Transcribing...",
+      "stop": "Stop",
+      "stopping": "Stopping...",
       "outputTitle": "Transcript",
       "outputPlaceholder": "The transcription will appear here.",
       "copy": "Copy",

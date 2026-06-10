@@ -196,10 +196,10 @@ Without these tools, HanhCute falls back to enigo which may have limited compati
 
 - You can also manage global shortcuts outside of Handy via Unix signals, which lets Wayland window managers or other hotkey daemons keep ownership of keybindings:
 
-  | Signal    | Action                                    | Example                |
-  | --------- | ----------------------------------------- | ---------------------- |
+  | Signal    | Action                                    | Example                   |
+  | --------- | ----------------------------------------- | ------------------------- |
   | `SIGUSR2` | Toggle transcription                      | `pkill -USR2 -n hanhcute` |
-| `SIGUSR1` | Toggle transcription with post-processing | `pkill -USR1 -n hanhcute` |
+  | `SIGUSR1` | Toggle transcription with post-processing | `pkill -USR1 -n hanhcute` |
 
   Example Sway config:
 
@@ -216,7 +216,6 @@ Without these tools, HanhCute falls back to enigo which may have limited compati
 - **Solution:** Open **Settings > Advanced** and set **"Overlay Position"** to **"None"** to disable the overlay
 - Enable **"Audio Feedback"** (also in Advanced) if you still want audible confirmation of recording state
 - Users who upgrade from older versions or import settings from other platforms may need to manually apply this change
-
 
 ### Platform Support
 
