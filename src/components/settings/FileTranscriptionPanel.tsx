@@ -163,7 +163,7 @@ export const FileTranscriptionPanel: React.FC = () => {
         type="button"
         onClick={handleSelectFile}
         disabled={isTranscribing}
-        className="w-full min-h-36 rounded-lg border border-dashed border-mid-gray/60 bg-mid-gray/5 px-4 py-5 text-start transition-colors hover:border-logo-primary hover:bg-logo-primary/10 focus:outline-none focus:border-logo-primary disabled:opacity-60 disabled:cursor-not-allowed"
+        className="w-full min-h-16 rounded-lg border border-dashed border-mid-gray/60 bg-mid-gray/5 px-4 py-3 text-start transition-colors hover:border-logo-primary hover:bg-logo-primary/10 focus:outline-none focus:border-logo-primary disabled:opacity-60 disabled:cursor-not-allowed"
       >
         <div className="flex items-start gap-3">
           <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-logo-primary/15 text-logo-primary">
@@ -270,7 +270,7 @@ export const FileTranscriptionPanel: React.FC = () => {
               ? progressLabel
               : t("settings.fileTranscription.outputPlaceholder")
           }
-          className="w-full min-h-44 select-text font-normal"
+          className="w-full min-h-96 select-text font-normal"
         />
       </div>
     </div>
