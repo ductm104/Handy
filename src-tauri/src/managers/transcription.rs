@@ -305,6 +305,7 @@ pub struct TranscriptionManager {
     watcher_handle: Arc<Mutex<Option<thread::JoinHandle<()>>>>,
     is_loading: Arc<Mutex<bool>>,
     loading_condvar: Arc<Condvar>,
+    file_transcription_cancelled: Arc<AtomicBool>,
 }
 
 impl TranscriptionManager {
@@ -319,6 +320,7 @@ impl TranscriptionManager {
             watcher_handle: Arc::new(Mutex::new(None)),
             is_loading: Arc::new(Mutex::new(false)),
             loading_condvar: Arc::new(Condvar::new()),
+            file_transcription_cancelled: Arc::new(AtomicBool::new(false)),
         };
 
         // Start the idle watcher
@@ -667,6 +669,21 @@ impl TranscriptionManager {
     pub fn get_current_model(&self) -> Option<String> {
         let current_model = self.current_model_id.lock().unwrap();
         current_model.clone()
+    }
+
+    pub fn cancel_file_transcription(&self) {
+        self.file_transcription_cancelled
+            .store(true, Ordering::SeqCst);
+        info!("File transcription cancellation requested");
+    }
+
+    pub fn is_file_transcription_cancelled(&self) -> bool {
+        self.file_transcription_cancelled.load(Ordering::SeqCst)
+    }
+
+    pub fn reset_file_transcription_cancelled(&self) {
+        self.file_transcription_cancelled
+            .store(false, Ordering::SeqCst);
     }
 
     pub fn transcribe(&self, audio: Vec<f32>) -> Result<String> {

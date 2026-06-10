@@ -19,6 +19,7 @@ type TranscriptionResponse =
   | { status: "ok"; data: FileTranscriptionResult }
   | { status: "busy" }
   | { status: "no-file" }
+  | { status: "cancelled" }
   | { status: "error"; error: string };
 
 interface FileTranscriptionStore {
@@ -28,12 +29,14 @@ interface FileTranscriptionStore {
   progress: number | null;
   progressStage: FileTranscriptionProgressStage | null;
   isTranscribing: boolean;
+  isStopping: boolean;
   error: string | null;
   setSelectedPath: (path: string) => void;
   clearFile: () => void;
   transcribeSelectedFile: (
     postProcess: boolean,
   ) => Promise<TranscriptionResponse>;
+  cancelTranscription: () => void;
 }
 
 export const useFileTranscriptionStore = create<FileTranscriptionStore>()(
@@ -44,6 +47,7 @@ export const useFileTranscriptionStore = create<FileTranscriptionStore>()(
     progress: null,
     progressStage: null,
     isTranscribing: false,
+    isStopping: false,
     error: null,
 
     setSelectedPath: (selectedPath) => {
@@ -83,12 +87,15 @@ export const useFileTranscriptionStore = create<FileTranscriptionStore>()(
 
       set({
         isTranscribing: true,
+        isStopping: false,
         error: null,
         result: null,
         partialText: "",
         progress: null,
         progressStage: "loading_model",
       });
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       let unlistenProgress: (() => void) | null = null;
 
@@ -112,6 +119,9 @@ export const useFileTranscriptionStore = create<FileTranscriptionStore>()(
         );
 
         if (response.status === "error") {
+          if (response.error === "Cancelled") {
+            return { status: "cancelled" };
+          }
           set({ error: response.error });
           return response;
         }
@@ -126,11 +136,17 @@ export const useFileTranscriptionStore = create<FileTranscriptionStore>()(
         unlistenProgress?.();
         set({
           isTranscribing: false,
+          isStopping: false,
           partialText: "",
           progress: null,
           progressStage: null,
         });
       }
+    },
+
+    cancelTranscription: () => {
+      set({ isStopping: true });
+      commands.cancelFileTranscription();
     },
   }),
 );

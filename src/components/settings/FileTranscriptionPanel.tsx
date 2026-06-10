@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { open } from "@tauri-apps/plugin-dialog";
-import { Check, Clipboard, FileAudio, Loader2, Upload, X } from "lucide-react";
+import { Check, Clipboard, FileAudio, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "../ui/Button";
 import { Textarea } from "../ui/Textarea";
@@ -33,9 +33,11 @@ export const FileTranscriptionPanel: React.FC = () => {
     progress,
     progressStage,
     isTranscribing,
+    isStopping,
     setSelectedPath,
     clearFile,
     transcribeSelectedFile,
+    cancelTranscription,
   } = useFileTranscriptionStore();
   const [copied, setCopied] = useState(false);
 
@@ -97,6 +99,10 @@ export const FileTranscriptionPanel: React.FC = () => {
     setCopied(false);
   };
 
+  const handleCancel = () => {
+    cancelTranscription();
+  };
+
   const handleTranscribe = async () => {
     if (!selectedPath) {
       toast.error(t("settings.fileTranscription.errors.noFile"));
@@ -120,6 +126,10 @@ export const FileTranscriptionPanel: React.FC = () => {
     }
 
     if (response.status === "busy") {
+      return;
+    }
+
+    if (response.status === "cancelled") {
       return;
     }
 
@@ -198,19 +208,27 @@ export const FileTranscriptionPanel: React.FC = () => {
             {t("settings.fileTranscription.removeFile")}
           </Button>
         )}
-        <Button
-          type="button"
-          onClick={handleTranscribe}
-          disabled={!canTranscribe}
-          className="ms-auto"
-        >
-          {isTranscribing && (
-            <Loader2 size={16} className="me-2 animate-spin" />
-          )}
-          {isTranscribing
-            ? t("settings.fileTranscription.transcribing")
-            : t("settings.fileTranscription.transcribe")}
-        </Button>
+        {isTranscribing ? (
+          <Button
+            type="button"
+            onClick={handleCancel}
+            disabled={isStopping}
+            className="ms-auto"
+          >
+            {isStopping
+              ? t("settings.fileTranscription.stopping")
+              : t("settings.fileTranscription.stop")}
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            onClick={handleTranscribe}
+            disabled={!canTranscribe}
+            className="ms-auto"
+          >
+            {t("settings.fileTranscription.transcribe")}
+          </Button>
+        )}
       </div>
 
       {!currentModelInfo?.is_downloaded && (
