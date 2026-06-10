@@ -8,7 +8,7 @@ use serde::Serialize;
 use specta::Type;
 use std::path::PathBuf;
 use std::sync::Arc;
-use tauri::{AppHandle, Emitter, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 
 #[derive(Serialize, Type)]
 pub struct ModelLoadStatus {
@@ -108,13 +108,26 @@ pub async fn transcribe_file(
 
     emit_file_transcription_progress(&app, "decoding", None, None);
     let decode_path = source_path.clone();
+
+    let vad_path = app
+        .path()
+        .resolve(
+            "resources/models/silero_vad_v4.onnx",
+            tauri::path::BaseDirectory::Resource,
+        )
+        .ok()
+        .filter(|p| p.exists());
+
     let samples = tauri::async_runtime::spawn_blocking(move || {
-        crate::audio_toolkit::read_media_file_samples(&decode_path)
+        let raw = crate::audio_toolkit::read_media_file_samples(&decode_path)?;
+        match vad_path {
+            Some(ref path) => crate::audio_toolkit::vad_filter_samples(&raw, path),
+            None => Ok(raw),
+        }
     })
     .await
     .map_err(|e| format!("Audio decode task panicked: {}", e))?
-    .map_err(|e| format!("Failed to decode media file: {}", e))?;
-
+    .map_err(|e| format!("Failed to process audio file: {}", e))?;
     if transcription_manager.is_file_transcription_cancelled() {
         return Err("Cancelled".to_string());
     }
