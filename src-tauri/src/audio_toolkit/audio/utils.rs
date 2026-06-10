@@ -15,6 +15,8 @@ use symphonia::core::probe::Hint;
 use symphonia::core::units;
 use symphonia::default::{get_codecs, get_probe};
 
+use crate::audio_toolkit::vad::{SileroVad, SmoothedVad, VadFrame, VoiceActivityDetector};
+
 const TRANSCRIPTION_SAMPLE_RATE: usize = 16_000;
 const RESAMPLER_CHUNK_SIZE: usize = 1024;
 
@@ -209,4 +211,47 @@ pub fn save_wav_file<P: AsRef<Path>>(file_path: P, samples: &[f32]) -> Result<()
     writer.finalize()?;
     debug!("Saved WAV file: {:?}", file_path.as_ref());
     Ok(())
+}
+
+const VAD_FRAME_SIZE: usize = (16000 * 30) / 1000;
+
+/// Apply Voice Activity Detection to remove silence from audio samples.
+///
+/// Uses the Silero VAD model with smoothing (prefill/hangover) to keep only
+/// speech segments. This prevents Whisper models (especially large-v3-turbo)
+/// from hallucinating text during silent or non-speech portions of audio.
+pub fn vad_filter_samples(samples: &[f32], vad_model_path: &Path) -> Result<Vec<f32>> {
+    if samples.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    let silero = SileroVad::new(vad_model_path, 0.3)?;
+    let mut smoothed = SmoothedVad::new(Box::new(silero), 15, 15, 2);
+
+    let mut output = Vec::new();
+    let silence_frame = vec![0.0f32; VAD_FRAME_SIZE];
+    const TRAILING_FRAMES: usize = 20;
+
+    for chunk in samples.chunks(VAD_FRAME_SIZE) {
+        let frame = if chunk.len() < VAD_FRAME_SIZE {
+            let mut padded = chunk.to_vec();
+            padded.resize(VAD_FRAME_SIZE, 0.0);
+            padded
+        } else {
+            chunk.to_vec()
+        };
+        match smoothed.push_frame(&frame)? {
+            VadFrame::Speech(data) => output.extend_from_slice(data),
+            VadFrame::Noise => {}
+        }
+    }
+
+    for _ in 0..TRAILING_FRAMES {
+        match smoothed.push_frame(&silence_frame)? {
+            VadFrame::Speech(data) => output.extend_from_slice(data),
+            VadFrame::Noise => {}
+        }
+    }
+
+    Ok(output)
 }
