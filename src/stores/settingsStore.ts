@@ -7,6 +7,7 @@ import type {
   WhisperAcceleratorSetting,
   OrtAcceleratorSetting,
   TranscriptionBreakMode,
+  TimestampMode,
 } from "@/bindings";
 import { commands } from "@/bindings";
 
@@ -140,6 +141,8 @@ const settingUpdaters: {
     commands.changeTranscriptionBreakModeSetting(
       value as TranscriptionBreakMode,
     ),
+  timestamp_mode: (value) =>
+    commands.changeTimestampModeSetting(value as TimestampMode),
   log_level: (value) => commands.setLogLevel(value as any),
   app_language: (value) => commands.changeAppLanguageSetting(value as string),
   experimental_enabled: (value) =>

@@ -5,6 +5,7 @@ import { Check, Clipboard, FileAudio, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "../ui/Button";
 import { Textarea } from "../ui/Textarea";
+import { TimestampModeSetting } from "./TimestampMode";
 import { useSettings } from "@/hooks/useSettings";
 import { useFileTranscriptionStore } from "@/stores/fileTranscriptionStore";
 import { useModelStore } from "@/stores/modelStore";
@@ -179,6 +180,8 @@ export const FileTranscriptionPanel: React.FC = () => {
           </div>
         </div>
       </button>
+
+      <TimestampModeSetting descriptionMode="tooltip" />
 
       <div className="flex flex-wrap items-center gap-2">
         <Button

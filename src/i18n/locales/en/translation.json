@@ -379,6 +379,14 @@
           "sentence": "Break by sentence",
           "word": "Break by word"
         }
+      },
+      "timestampMode": {
+        "title": "Timestamp Mode",
+        "description": "Choose whether to include a [hh:mm:ss] timestamp before each transcribed segment.",
+        "options": {
+          "plain": "Plain Text",
+          "timestamp": "With Timestamp"
+        }
       }
     },
     "postProcessing": {

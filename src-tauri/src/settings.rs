@@ -162,6 +162,14 @@ pub enum TranscriptionBreakMode {
     Word,
 }
 
+#[derive(Serialize, Deserialize, Debug, Default, Clone, Copy, PartialEq, Eq, Type)]
+#[serde(rename_all = "snake_case")]
+pub enum TimestampMode {
+    #[default]
+    Plain,
+    Timestamp,
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Type)]
 #[serde(rename_all = "snake_case")]
 pub enum RecordingRetentionPeriod {
@@ -414,6 +422,8 @@ pub struct AppSettings {
     pub append_trailing_space: bool,
     #[serde(default)]
     pub transcription_break_mode: TranscriptionBreakMode,
+    #[serde(default)]
+    pub timestamp_mode: TimestampMode,
     #[serde(default = "default_app_language")]
     pub app_language: String,
     #[serde(default)]
@@ -806,6 +816,7 @@ pub fn get_default_settings() -> AppSettings {
         mute_while_recording: false,
         append_trailing_space: false,
         transcription_break_mode: TranscriptionBreakMode::default(),
+        timestamp_mode: TimestampMode::default(),
         app_language: default_app_language(),
         experimental_enabled: false,
         lazy_stream_close: false,

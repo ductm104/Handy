@@ -23,8 +23,8 @@ use tauri_plugin_autostart::ManagerExt;
 use crate::settings::APPLE_INTELLIGENCE_DEFAULT_MODEL_ID;
 use crate::settings::{
     self, get_settings, AutoSubmitKey, ClipboardHandling, KeyboardImplementation, LLMPrompt,
-    OverlayPosition, PasteMethod, ShortcutBinding, SoundTheme, TranscriptionBreakMode, TypingTool,
-    APPLE_INTELLIGENCE_PROVIDER_ID,
+    OverlayPosition, PasteMethod, ShortcutBinding, SoundTheme, TimestampMode,
+    TranscriptionBreakMode, TypingTool, APPLE_INTELLIGENCE_PROVIDER_ID,
 };
 use crate::tray;
 
@@ -1050,6 +1050,15 @@ pub fn change_transcription_break_mode_setting(
 ) -> Result<(), String> {
     let mut settings = settings::get_settings(&app);
     settings.transcription_break_mode = mode;
+    settings::write_settings(&app, settings);
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn change_timestamp_mode_setting(app: AppHandle, mode: TimestampMode) -> Result<(), String> {
+    let mut settings = settings::get_settings(&app);
+    settings.timestamp_mode = mode;
     settings::write_settings(&app, settings);
     Ok(())
 }

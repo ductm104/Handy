@@ -3,7 +3,7 @@ use crate::managers::history::{HistoryEntry, HistoryManager};
 use crate::managers::transcription::{
     TranscriptionManager, TranscriptionProgress, TranscriptionProgressCallback,
 };
-use crate::settings::{get_settings, write_settings, ModelUnloadTimeout};
+use crate::settings::{get_settings, write_settings, ModelUnloadTimeout, TimestampMode};
 use serde::Serialize;
 use specta::Type;
 use std::path::PathBuf;
@@ -138,6 +138,10 @@ pub async fn transcribe_file(
             emit_file_transcription_progress(app, "transcribing", text, Some(actual));
         };
 
+    let settings = get_settings(&app);
+    let apply_timestamps = settings.timestamp_mode == TimestampMode::Timestamp;
+    let sample_rate = crate::audio_toolkit::constants::WHISPER_SAMPLE_RATE as f64;
+
     let streaming_result =
         tauri::async_runtime::spawn_blocking(move || -> Result<String, String> {
             let mut decoder = crate::audio_toolkit::MediaFileDecoder::open(&decode_path)
@@ -270,8 +274,16 @@ pub async fn transcribe_file(
                         decoded_samples,
                         Arc::clone(&max_progress),
                     );
+                    let base_offset = current_chunk_start_decoded as f64 / sample_rate;
                     let text = tm
-                        .transcribe_chunk_with_progress(&current_chunk, Some(callback), true, true)
+                        .transcribe_chunk_with_progress(
+                            &current_chunk,
+                            Some(callback),
+                            true,
+                            true,
+                            base_offset,
+                            apply_timestamps,
+                        )
                         .map_err(|e| format!("Transcription failed: {}", e))?;
                     if !text.is_empty() {
                         {
@@ -310,8 +322,16 @@ pub async fn transcribe_file(
                     decoded_samples,
                     Arc::clone(&max_progress),
                 );
+                let base_offset = current_chunk_start_decoded as f64 / sample_rate;
                 let text = tm
-                    .transcribe_chunk_with_progress(&current_chunk, Some(callback), false, true)
+                    .transcribe_chunk_with_progress(
+                        &current_chunk,
+                        Some(callback),
+                        false,
+                        true,
+                        base_offset,
+                        apply_timestamps,
+                    )
                     .map_err(|e| format!("Transcription failed: {}", e))?;
                 if !text.is_empty() {
                     {

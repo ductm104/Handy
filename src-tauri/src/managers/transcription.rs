@@ -2,7 +2,8 @@ use crate::audio_toolkit::{apply_custom_words, filter_transcription_output};
 use crate::managers::audio::AudioRecordingManager;
 use crate::managers::model::{EngineType, ModelManager};
 use crate::settings::{
-    get_settings, ModelUnloadTimeout, OrtAcceleratorSetting, WhisperAcceleratorSetting,
+    get_settings, ModelUnloadTimeout, OrtAcceleratorSetting, TimestampMode,
+    WhisperAcceleratorSetting,
 };
 use anyhow::Result;
 use log::{debug, error, info, warn};
@@ -49,6 +50,24 @@ pub struct TranscriptionProgress {
 }
 
 pub type TranscriptionProgressCallback = Arc<dyn Fn(TranscriptionProgress) + Send + Sync>;
+
+/// Format a duration in seconds as `hh:mm:ss`.
+pub fn format_seconds_hhmmss(seconds: f64) -> String {
+    let total_seconds = seconds.max(0.0) as u64;
+    let hours = total_seconds / 3600;
+    let minutes = (total_seconds % 3600) / 60;
+    let seconds = total_seconds % 60;
+    format!("{:02}:{:02}:{:02}", hours, minutes, seconds)
+}
+
+/// Format a begin/end range as `[hh:mm:ss - hh:mm:ss]`.
+pub fn format_timestamp_range(begin: f64, end: f64) -> String {
+    format!(
+        "[{} - {}]",
+        format_seconds_hhmmss(begin),
+        format_seconds_hhmmss(end)
+    )
+}
 
 struct WhisperEngine {
     state: whisper_rs::WhisperState,
@@ -697,12 +716,15 @@ impl TranscriptionManager {
     }
 
     pub fn transcribe(&self, audio: Vec<f32>) -> Result<String> {
-        self.transcribe_inner(&audio, None, false, false)
+        self.transcribe_inner(&audio, None, false, false, 0.0, false)
     }
 
     /// Transcribes each detected speech segment separately and joins the
     /// results with newlines. This resets Whisper's text context between
     /// segments, which reduces hallucination carry-over across long pauses.
+    ///
+    /// When timestamp mode is enabled, each sentence-level segment is prefixed
+    /// with its audio position as `[hh:mm:ss - hh:mm:ss]`.
     pub fn transcribe_segments(
         &self,
         audio: Vec<f32>,
@@ -712,12 +734,16 @@ impl TranscriptionManager {
             return Ok(String::new());
         }
 
+        let settings = get_settings(&self.app_handle);
+        let apply_timestamps = settings.timestamp_mode == TimestampMode::Timestamp;
+        let sample_rate = crate::audio_toolkit::constants::WHISPER_SAMPLE_RATE as f64;
+
         // Fall back to a single inference when there is only one speech segment
         // or when the segments cover essentially the whole buffer.
         if segments.len() == 1 {
             let (start, end) = segments[0];
             if start == 0 && end >= audio.len().saturating_sub(1) {
-                return self.transcribe_inner(&audio, None, false, false);
+                return self.transcribe_inner(&audio, None, false, false, 0.0, apply_timestamps);
             }
         }
 
@@ -732,7 +758,15 @@ impl TranscriptionManager {
             // Keep the model loaded across segment inferences; only allow the
             // final segment to trigger immediate unload if configured.
             let skip_unload = i != last_idx;
-            match self.transcribe_inner(segment_audio, None, skip_unload, true) {
+            let base_offset = start as f64 / sample_rate;
+            match self.transcribe_inner(
+                segment_audio,
+                None,
+                skip_unload,
+                true,
+                base_offset,
+                apply_timestamps,
+            ) {
                 Ok(text) if !text.is_empty() => texts.push(text),
                 Ok(_) => {}
                 Err(e) => {
@@ -750,7 +784,7 @@ impl TranscriptionManager {
         audio: Vec<f32>,
         progress_callback: Option<TranscriptionProgressCallback>,
     ) -> Result<String> {
-        self.transcribe_inner(&audio, progress_callback, false, false)
+        self.transcribe_inner(&audio, progress_callback, false, false, 0.0, false)
     }
 
     pub fn transcribe_chunk_with_progress(
@@ -759,8 +793,17 @@ impl TranscriptionManager {
         progress_callback: Option<TranscriptionProgressCallback>,
         skip_immediate_unload: bool,
         no_context: bool,
+        base_offset_seconds: f64,
+        apply_timestamps: bool,
     ) -> Result<String> {
-        self.transcribe_inner(audio, progress_callback, skip_immediate_unload, no_context)
+        self.transcribe_inner(
+            audio,
+            progress_callback,
+            skip_immediate_unload,
+            no_context,
+            base_offset_seconds,
+            apply_timestamps,
+        )
     }
 
     fn transcribe_inner(
@@ -769,6 +812,8 @@ impl TranscriptionManager {
         progress_callback: Option<TranscriptionProgressCallback>,
         skip_immediate_unload: bool,
         no_context: bool,
+        base_offset_seconds: f64,
+        apply_timestamps: bool,
     ) -> Result<String> {
         #[cfg(debug_assertions)]
         if std::env::var("HANHCUTE_FORCE_TRANSCRIPTION_FAILURE").is_ok() {
@@ -1029,21 +1074,66 @@ impl TranscriptionManager {
             }
         };
 
-        // Reconstruct text from segment-level data for better sentence line breaks
-        let segments_text = result.segments.as_ref().map(|segs| {
-            if segs.is_empty() {
-                String::new()
-            } else {
-                segs.iter()
-                    .map(|s| s.text.trim())
+        // Reconstruct text from segment-level data for better sentence line breaks.
+        // When timestamp mode is on, use each segment's engine-local start/end
+        // plus the audio offset of the current chunk.
+        let segments_text = if apply_timestamps {
+            result.segments.as_ref().and_then(|segs| {
+                if segs.is_empty() {
+                    return None;
+                }
+                let text = segs
+                    .iter()
+                    .map(|s| {
+                        let text = s.text.trim();
+                        if text.is_empty() {
+                            return String::new();
+                        }
+                        let begin = base_offset_seconds + s.start as f64;
+                        let end = base_offset_seconds + s.end as f64;
+                        format!("{} {}", format_timestamp_range(begin, end), text)
+                    })
                     .filter(|s| !s.is_empty())
                     .collect::<Vec<_>>()
-                    .join("\n")
-            }
-        });
+                    .join("\n");
+                if text.is_empty() {
+                    None
+                } else {
+                    Some(text)
+                }
+            })
+        } else {
+            result.segments.as_ref().map(|segs| {
+                if segs.is_empty() {
+                    String::new()
+                } else {
+                    segs.iter()
+                        .map(|s| s.text.trim())
+                        .filter(|s| !s.is_empty())
+                        .collect::<Vec<_>>()
+                        .join("\n")
+                }
+            })
+        };
 
         let raw_text = match segments_text {
             Some(t) if !t.is_empty() => t,
+            _ if apply_timestamps => {
+                // Fallback when the engine did not return per-segment timestamps:
+                // stamp the whole chunk with its audio range.
+                let duration = audio.len() as f64
+                    / crate::audio_toolkit::constants::WHISPER_SAMPLE_RATE as f64;
+                let text = result.text.trim();
+                if text.is_empty() {
+                    String::new()
+                } else {
+                    format!(
+                        "{} {}",
+                        format_timestamp_range(base_offset_seconds, base_offset_seconds + duration),
+                        text
+                    )
+                }
+            }
             _ => result.text,
         };
 
