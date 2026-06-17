@@ -230,14 +230,24 @@ fn get_filler_words_for_language(lang: &str) -> &'static [&'static str] {
     }
 }
 
-static MULTI_SPACE_PATTERN: Lazy<Regex> = Lazy::new(|| Regex::new(r"\s{2,}").unwrap());
+static MULTI_SPACE_PATTERN: Lazy<Regex> = Lazy::new(|| Regex::new(r"[ \t]{2,}").unwrap());
+
+static EXCESSIVE_NEWLINES: Lazy<Regex> = Lazy::new(|| Regex::new(r"\n{3,}").unwrap());
 
 /// Collapses repeated words (3+ repetitions) to a single instance.
 /// E.g., "wh wh wh wh" -> "wh", "I I I I" -> "I"
+/// Processes each line independently to preserve line break structure.
 fn collapse_stutters(text: &str) -> String {
-    let words: Vec<&str> = text.split_whitespace().collect();
+    text.split('\n')
+        .map(collapse_stutters_in_line)
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+fn collapse_stutters_in_line(line: &str) -> String {
+    let words: Vec<&str> = line.split_whitespace().collect();
     if words.is_empty() {
-        return text.to_string();
+        return String::new();
     }
 
     let mut result: Vec<&str> = Vec::new();
@@ -248,13 +258,11 @@ fn collapse_stutters(text: &str) -> String {
         let word_lower = word.to_lowercase();
 
         if word_lower.chars().all(|c| c.is_alphabetic()) {
-            // Count consecutive repetitions (case-insensitive)
             let mut count = 1;
             while i + count < words.len() && words[i + count].to_lowercase() == word_lower {
                 count += 1;
             }
 
-            // If 3+ repetitions, collapse to single instance
             if count >= 3 {
                 result.push(word);
                 i += count;
@@ -276,7 +284,8 @@ fn collapse_stutters(text: &str) -> String {
 /// This function cleans up raw transcription text by:
 /// 1. Removing filler words based on the app language (or custom list)
 /// 2. Collapsing repeated word stutters (e.g., "wh wh wh" -> "wh")
-/// 3. Cleaning up excess whitespace
+/// 3. Cleaning up excess whitespace within lines
+/// 4. Collapsing excessive newlines (3+) to paragraph breaks (2)
 ///
 /// # Arguments
 /// * `text` - The raw transcription text to filter
@@ -311,21 +320,27 @@ pub fn filter_transcription_output(
     }
 
     // Collapse repeated 1-2 letter words (stutter artifacts like "wh wh wh wh")
+    // Processes each line independently to preserve line break structure
     filtered = collapse_stutters(&filtered);
 
-    // Clean up multiple spaces to single space
+    // Clean up multiple spaces (within lines only, not across newlines)
     filtered = MULTI_SPACE_PATTERN.replace_all(&filtered, " ").to_string();
+
+    // Collapse excessive newlines (3+) to paragraph breaks (2)
+    filtered = EXCESSIVE_NEWLINES
+        .replace_all(&filtered, "\n\n")
+        .to_string();
 
     // Trim leading/trailing whitespace
     filtered.trim().to_string()
 }
 
-static SENTENCE_BOUNDARY: Lazy<Regex> = Lazy::new(|| Regex::new(r"([.!?]+)\s+").unwrap());
+static SENTENCE_BOUNDARY: Lazy<Regex> = Lazy::new(|| Regex::new(r"([.!?。！？]+)\s+").unwrap());
 
 /// Applies readability breaks to transcribed text based on the selected mode.
 ///
 /// - `None`: returns the text unchanged.
-/// - `Sentence`: puts each sentence on its own line.
+/// - `Sentence`: puts each sentence on its own line, preserving paragraph breaks.
 /// - `Word`: puts each word on its own line.
 pub fn apply_transcription_breaks(text: &str, mode: TranscriptionBreakMode) -> String {
     match mode {
@@ -335,10 +350,18 @@ pub fn apply_transcription_breaks(text: &str, mode: TranscriptionBreakMode) -> S
             if trimmed.is_empty() {
                 return trimmed.to_string();
             }
-            SENTENCE_BOUNDARY
-                .replace_all(trimmed, "$1\n")
-                .trim()
-                .to_string()
+            // Split on paragraph breaks (double newline), apply sentence breaks
+            // within each paragraph, then rejoin with paragraph breaks.
+            let paragraphs: Vec<&str> = trimmed.split("\n\n").collect();
+            let processed: Vec<String> = paragraphs
+                .iter()
+                .map(|p| {
+                    let result = SENTENCE_BOUNDARY.replace_all(p, "$1\n");
+                    result.trim().to_string()
+                })
+                .filter(|p| !p.is_empty())
+                .collect();
+            processed.join("\n\n")
         }
         TranscriptionBreakMode::Word => text
             .split_whitespace()
@@ -616,6 +639,16 @@ mod tests {
     }
 
     #[test]
+    fn test_apply_transcription_breaks_sentence_preserves_paragraphs() {
+        let text = "Hello world. How are you?\n\nI am fine. Great day.";
+        let result = apply_transcription_breaks(text, TranscriptionBreakMode::Sentence);
+        assert_eq!(
+            result,
+            "Hello world.\nHow are you?\n\nI am fine.\nGreat day."
+        );
+    }
+
+    #[test]
     fn test_apply_transcription_breaks_word() {
         let text = "Hello world how are you";
         let result = apply_transcription_breaks(text, TranscriptionBreakMode::Word);
@@ -627,5 +660,33 @@ mod tests {
         let text = "   ";
         let result = apply_transcription_breaks(text, TranscriptionBreakMode::Sentence);
         assert_eq!(result, "");
+    }
+
+    #[test]
+    fn test_filter_preserves_line_breaks() {
+        let text = "Hello world.\nHow are you?\n\nI am fine.";
+        let result = filter_transcription_output(text, "en", &None);
+        assert_eq!(result, "Hello world.\nHow are you?\n\nI am fine.");
+    }
+
+    #[test]
+    fn test_filter_collapse_stutters_preserves_newlines() {
+        let text = "wh wh wh wh why\nhello hello hello hello world";
+        let result = filter_transcription_output(text, "en", &None);
+        assert_eq!(result, "wh why\nhello world");
+    }
+
+    #[test]
+    fn test_filter_collapses_excessive_newlines() {
+        let text = "Hello\n\n\n\nWorld";
+        let result = filter_transcription_output(text, "en", &None);
+        assert_eq!(result, "Hello\n\nWorld");
+    }
+
+    #[test]
+    fn test_filter_collapses_spaces_not_newlines() {
+        let text = "Hello    world.\nHow   are    you?";
+        let result = filter_transcription_output(text, "en", &None);
+        assert_eq!(result, "Hello world.\nHow are you?");
     }
 }

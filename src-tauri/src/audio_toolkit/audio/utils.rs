@@ -18,7 +18,7 @@ use symphonia::default::{get_codecs, get_probe};
 use crate::audio_toolkit::vad::{SileroVad, SmoothedVad, VadFrame, VoiceActivityDetector};
 
 const TRANSCRIPTION_SAMPLE_RATE: usize = 16_000;
-const RESAMPLER_CHUNK_SIZE: usize = 1024;
+const RESAMPLER_CHUNK_SIZE: usize = 16_384;
 
 /// Default chunk size used when streaming file transcription. Each chunk
 /// represents one minute of 16 kHz mono audio.

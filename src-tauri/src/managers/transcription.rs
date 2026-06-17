@@ -257,12 +257,18 @@ impl WhisperEngine {
             let start = segment.start_timestamp() as f32 / 100.0;
             let end = segment.end_timestamp() as f32 / 100.0;
 
-            segments.push(TranscriptionSegment {
-                start,
-                end,
-                text: text.to_string(),
-            });
-            full_text.push_str(text);
+            let trimmed = text.trim();
+            if !trimmed.is_empty() {
+                segments.push(TranscriptionSegment {
+                    start,
+                    end,
+                    text: trimmed.to_string(),
+                });
+                if !full_text.is_empty() {
+                    full_text.push('\n');
+                }
+                full_text.push_str(trimmed);
+            }
         }
 
         Ok(TranscriptionResult {
@@ -735,7 +741,7 @@ impl TranscriptionManager {
             }
         }
 
-        Ok(texts.join("\n"))
+        Ok(texts.join("\n\n"))
     }
 
     #[allow(dead_code)]
@@ -1023,6 +1029,24 @@ impl TranscriptionManager {
             }
         };
 
+        // Reconstruct text from segment-level data for better sentence line breaks
+        let segments_text = result.segments.as_ref().map(|segs| {
+            if segs.is_empty() {
+                String::new()
+            } else {
+                segs.iter()
+                    .map(|s| s.text.trim())
+                    .filter(|s| !s.is_empty())
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            }
+        });
+
+        let raw_text = match segments_text {
+            Some(t) if !t.is_empty() => t,
+            _ => result.text,
+        };
+
         // Apply word correction if custom words are configured.
         // Skip for Whisper models since custom words are already passed as initial_prompt.
         let is_whisper = self
@@ -1033,12 +1057,12 @@ impl TranscriptionManager {
 
         let corrected_result = if !settings.custom_words.is_empty() && !is_whisper {
             apply_custom_words(
-                &result.text,
+                &raw_text,
                 &settings.custom_words,
                 settings.word_correction_threshold,
             )
         } else {
-            result.text
+            raw_text
         };
 
         // Filter out filler words and hallucinations
