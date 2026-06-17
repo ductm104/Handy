@@ -4,7 +4,6 @@ import { commands, type FileTranscriptionResult } from "@/bindings";
 
 type FileTranscriptionProgressStage =
   | "loading_model"
-  | "decoding"
   | "transcribing"
   | "post_processing"
   | "complete";

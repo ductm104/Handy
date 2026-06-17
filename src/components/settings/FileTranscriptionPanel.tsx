@@ -57,8 +57,6 @@ export const FileTranscriptionPanel: React.FC = () => {
     switch (progressStage) {
       case "loading_model":
         return t("settings.fileTranscription.progress.loadingModel");
-      case "decoding":
-        return t("settings.fileTranscription.progress.decoding");
       case "post_processing":
         return t("settings.fileTranscription.progress.postProcessing");
       case "complete":
@@ -71,10 +69,7 @@ export const FileTranscriptionPanel: React.FC = () => {
 
   const progressLabel =
     isTranscribing && progress !== null
-      ? t("settings.fileTranscription.progress.withPercentage", {
-          label: getProgressLabel(),
-          progress,
-        })
+      ? `${t("settings.fileTranscription.progress.transcribing")} ${progress}%`
       : getProgressLabel();
 
   const handleSelectFile = async () => {
