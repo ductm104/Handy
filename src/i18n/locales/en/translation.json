@@ -370,6 +370,15 @@
         "add": "Add",
         "remove": "Remove {{word}}",
         "duplicate": "\"{{word}}\" already exists"
+      },
+      "transcriptionBreakMode": {
+        "title": "Transcription Breaks",
+        "description": "Choose how to split transcribed text for readability.",
+        "options": {
+          "none": "No extra breaks",
+          "sentence": "Break by sentence",
+          "word": "Break by word"
+        }
       }
     },
     "postProcessing": {

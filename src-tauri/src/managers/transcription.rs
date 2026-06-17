@@ -174,8 +174,9 @@ impl WhisperEngine {
         &mut self,
         samples: &[f32],
         params: &WhisperInferenceParams,
+        no_context: bool,
     ) -> Result<TranscriptionResult> {
-        self.infer(samples, params, None)
+        self.infer(samples, params, None, no_context)
     }
 
     fn transcribe_with_progress(
@@ -183,8 +184,9 @@ impl WhisperEngine {
         samples: &[f32],
         params: &WhisperInferenceParams,
         progress_callback: Option<TranscriptionProgressCallback>,
+        no_context: bool,
     ) -> Result<TranscriptionResult> {
-        self.infer(samples, params, progress_callback)
+        self.infer(samples, params, progress_callback, no_context)
     }
 
     fn infer(
@@ -192,6 +194,7 @@ impl WhisperEngine {
         samples: &[f32],
         params: &WhisperInferenceParams,
         progress_callback: Option<TranscriptionProgressCallback>,
+        no_context: bool,
     ) -> Result<TranscriptionResult> {
         let mut full_params = FullParams::new(SamplingStrategy::BeamSearch {
             beam_size: 3,
@@ -206,6 +209,7 @@ impl WhisperEngine {
         full_params.set_suppress_blank(params.suppress_blank);
         full_params.set_suppress_nst(params.suppress_non_speech_tokens);
         full_params.set_no_speech_thold(params.no_speech_thold);
+        full_params.set_no_context(no_context);
         if params.n_threads > 0 {
             full_params.set_n_threads(params.n_threads);
         }
@@ -687,21 +691,78 @@ impl TranscriptionManager {
     }
 
     pub fn transcribe(&self, audio: Vec<f32>) -> Result<String> {
-        self.transcribe_inner(audio, None)
+        self.transcribe_inner(&audio, None, false, false)
     }
 
+    /// Transcribes each detected speech segment separately and joins the
+    /// results with newlines. This resets Whisper's text context between
+    /// segments, which reduces hallucination carry-over across long pauses.
+    pub fn transcribe_segments(
+        &self,
+        audio: Vec<f32>,
+        segments: Vec<(usize, usize)>,
+    ) -> Result<String> {
+        if segments.is_empty() || audio.is_empty() {
+            return Ok(String::new());
+        }
+
+        // Fall back to a single inference when there is only one speech segment
+        // or when the segments cover essentially the whole buffer.
+        if segments.len() == 1 {
+            let (start, end) = segments[0];
+            if start == 0 && end >= audio.len().saturating_sub(1) {
+                return self.transcribe_inner(&audio, None, false, false);
+            }
+        }
+
+        let mut texts = Vec::with_capacity(segments.len());
+        let last_idx = segments.len().saturating_sub(1);
+        for (i, (start, end)) in segments.into_iter().enumerate() {
+            let end = end.min(audio.len());
+            if start >= end {
+                continue;
+            }
+            let segment_audio = &audio[start..end];
+            // Keep the model loaded across segment inferences; only allow the
+            // final segment to trigger immediate unload if configured.
+            let skip_unload = i != last_idx;
+            match self.transcribe_inner(segment_audio, None, skip_unload, true) {
+                Ok(text) if !text.is_empty() => texts.push(text),
+                Ok(_) => {}
+                Err(e) => {
+                    warn!("Failed to transcribe speech segment: {}", e);
+                }
+            }
+        }
+
+        Ok(texts.join("\n"))
+    }
+
+    #[allow(dead_code)]
     pub fn transcribe_with_progress(
         &self,
         audio: Vec<f32>,
         progress_callback: Option<TranscriptionProgressCallback>,
     ) -> Result<String> {
-        self.transcribe_inner(audio, progress_callback)
+        self.transcribe_inner(&audio, progress_callback, false, false)
+    }
+
+    pub fn transcribe_chunk_with_progress(
+        &self,
+        audio: &[f32],
+        progress_callback: Option<TranscriptionProgressCallback>,
+        skip_immediate_unload: bool,
+        no_context: bool,
+    ) -> Result<String> {
+        self.transcribe_inner(audio, progress_callback, skip_immediate_unload, no_context)
     }
 
     fn transcribe_inner(
         &self,
-        audio: Vec<f32>,
+        audio: &[f32],
         progress_callback: Option<TranscriptionProgressCallback>,
+        skip_immediate_unload: bool,
+        no_context: bool,
     ) -> Result<String> {
         #[cfg(debug_assertions)]
         if std::env::var("HANHCUTE_FORCE_TRANSCRIPTION_FAILURE").is_ok() {
@@ -818,13 +879,18 @@ impl TranscriptionManager {
 
                             if let Some(callback) = progress_callback.clone() {
                                 whisper_engine
-                                    .transcribe_with_progress(&audio, &params, Some(callback))
+                                    .transcribe_with_progress(
+                                        audio,
+                                        &params,
+                                        Some(callback),
+                                        no_context,
+                                    )
                                     .map_err(|e| {
                                         anyhow::anyhow!("Whisper transcription failed: {}", e)
                                     })
                             } else {
                                 whisper_engine
-                                    .transcribe_with(&audio, &params)
+                                    .transcribe_with(audio, &params, no_context)
                                     .map_err(|e| {
                                         anyhow::anyhow!("Whisper transcription failed: {}", e)
                                     })
@@ -836,16 +902,16 @@ impl TranscriptionManager {
                                 ..Default::default()
                             };
                             parakeet_engine
-                                .transcribe_with(&audio, &params)
+                                .transcribe_with(audio, &params)
                                 .map_err(|e| {
                                     anyhow::anyhow!("Parakeet transcription failed: {}", e)
                                 })
                         }
                         LoadedEngine::Moonshine(moonshine_engine) => moonshine_engine
-                            .transcribe(&audio, &TranscribeOptions::default())
+                            .transcribe(audio, &TranscribeOptions::default())
                             .map_err(|e| anyhow::anyhow!("Moonshine transcription failed: {}", e)),
                         LoadedEngine::MoonshineStreaming(streaming_engine) => streaming_engine
-                            .transcribe(&audio, &TranscribeOptions::default())
+                            .transcribe(audio, &TranscribeOptions::default())
                             .map_err(|e| {
                                 anyhow::anyhow!("Moonshine streaming transcription failed: {}", e)
                             }),
@@ -863,13 +929,13 @@ impl TranscriptionManager {
                                 use_itn: Some(true),
                             };
                             sense_voice_engine
-                                .transcribe_with(&audio, &params)
+                                .transcribe_with(audio, &params)
                                 .map_err(|e| {
                                     anyhow::anyhow!("SenseVoice transcription failed: {}", e)
                                 })
                         }
                         LoadedEngine::GigaAM(gigaam_engine) => gigaam_engine
-                            .transcribe(&audio, &TranscribeOptions::default())
+                            .transcribe(audio, &TranscribeOptions::default())
                             .map_err(|e| anyhow::anyhow!("GigaAM transcription failed: {}", e)),
                         LoadedEngine::Canary(canary_engine) => {
                             let lang = if validated_language == "auto" {
@@ -883,7 +949,7 @@ impl TranscriptionManager {
                                 ..Default::default()
                             };
                             canary_engine
-                                .transcribe(&audio, &options)
+                                .transcribe(audio, &options)
                                 .map_err(|e| anyhow::anyhow!("Canary transcription failed: {}", e))
                         }
                         LoadedEngine::Cohere(cohere_engine) => {
@@ -901,7 +967,7 @@ impl TranscriptionManager {
                                 ..Default::default()
                             };
                             cohere_engine
-                                .transcribe(&audio, &options)
+                                .transcribe(audio, &options)
                                 .map_err(|e| anyhow::anyhow!("Cohere transcription failed: {}", e))
                         }
                     }
@@ -1002,7 +1068,9 @@ impl TranscriptionManager {
             info!("Transcription result: {}", final_result);
         }
 
-        self.maybe_unload_immediately("transcription");
+        if !skip_immediate_unload {
+            self.maybe_unload_immediately("transcription");
+        }
 
         Ok(final_result)
     }

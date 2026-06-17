@@ -1,4 +1,6 @@
-use crate::audio_toolkit::{list_input_devices, vad::SmoothedVad, AudioRecorder, SileroVad};
+use crate::audio_toolkit::{
+    list_input_devices, vad::SmoothedVad, AudioRecorder, RecordingResult, SileroVad,
+};
 use crate::helpers::clamshell;
 use crate::settings::{get_settings, AppSettings};
 use crate::utils;
@@ -414,7 +416,7 @@ impl AudioRecordingManager {
         Ok(())
     }
 
-    pub fn stop_recording(&self, binding_id: &str) -> Option<Vec<f32>> {
+    pub fn stop_recording(&self, binding_id: &str) -> Option<RecordingResult> {
         let mut state = self.state.lock().unwrap();
 
         match *state {
@@ -434,17 +436,23 @@ impl AudioRecordingManager {
                     std::thread::sleep(Duration::from_millis(settings.extra_recording_buffer_ms));
                 }
 
-                let samples = if let Some(rec) = self.recorder.lock().unwrap().as_ref() {
+                let mut result = if let Some(rec) = self.recorder.lock().unwrap().as_ref() {
                     match rec.stop() {
                         Ok(buf) => buf,
                         Err(e) => {
                             error!("stop() failed: {e}");
-                            Vec::new()
+                            RecordingResult {
+                                samples: Vec::new(),
+                                segments: Vec::new(),
+                            }
                         }
                     }
                 } else {
                     error!("Recorder not available");
-                    Vec::new()
+                    RecordingResult {
+                        samples: Vec::new(),
+                        segments: Vec::new(),
+                    }
                 };
 
                 *self.is_recording.lock().unwrap() = false;
@@ -459,14 +467,13 @@ impl AudioRecordingManager {
                 }
 
                 // Pad if very short
-                let s_len = samples.len();
+                let s_len = result.samples.len();
                 // debug!("Got {} samples", s_len);
                 if s_len < WHISPER_SAMPLE_RATE && s_len > 0 {
-                    let mut padded = samples;
-                    padded.resize(WHISPER_SAMPLE_RATE * 5 / 4, 0.0);
-                    Some(padded)
+                    result.samples.resize(WHISPER_SAMPLE_RATE * 5 / 4, 0.0);
+                    Some(result)
                 } else {
-                    Some(samples)
+                    Some(result)
                 }
             }
             _ => None,

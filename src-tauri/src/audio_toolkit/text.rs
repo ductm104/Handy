@@ -1,3 +1,4 @@
+use crate::settings::TranscriptionBreakMode;
 use natural::phonetics::soundex;
 use once_cell::sync::Lazy;
 use regex::Regex;
@@ -319,6 +320,34 @@ pub fn filter_transcription_output(
     filtered.trim().to_string()
 }
 
+static SENTENCE_BOUNDARY: Lazy<Regex> = Lazy::new(|| Regex::new(r"([.!?]+)\s+").unwrap());
+
+/// Applies readability breaks to transcribed text based on the selected mode.
+///
+/// - `None`: returns the text unchanged.
+/// - `Sentence`: puts each sentence on its own line.
+/// - `Word`: puts each word on its own line.
+pub fn apply_transcription_breaks(text: &str, mode: TranscriptionBreakMode) -> String {
+    match mode {
+        TranscriptionBreakMode::None => text.to_string(),
+        TranscriptionBreakMode::Sentence => {
+            let trimmed = text.trim();
+            if trimmed.is_empty() {
+                return trimmed.to_string();
+            }
+            SENTENCE_BOUNDARY
+                .replace_all(trimmed, "$1\n")
+                .trim()
+                .to_string()
+        }
+        TranscriptionBreakMode::Word => text
+            .split_whitespace()
+            .filter(|s| !s.is_empty())
+            .collect::<Vec<_>>()
+            .join("\n"),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -563,5 +592,40 @@ mod tests {
             "got double-counted result: {}",
             result
         );
+    }
+
+    #[test]
+    fn test_apply_transcription_breaks_none() {
+        let text = "Hello world. How are you?";
+        let result = apply_transcription_breaks(text, TranscriptionBreakMode::None);
+        assert_eq!(result, "Hello world. How are you?");
+    }
+
+    #[test]
+    fn test_apply_transcription_breaks_sentence() {
+        let text = "Hello world. How are you? I am fine.";
+        let result = apply_transcription_breaks(text, TranscriptionBreakMode::Sentence);
+        assert_eq!(result, "Hello world.\nHow are you?\nI am fine.");
+    }
+
+    #[test]
+    fn test_apply_transcription_breaks_sentence_trims() {
+        let text = "  Hello world. How are you?  ";
+        let result = apply_transcription_breaks(text, TranscriptionBreakMode::Sentence);
+        assert_eq!(result, "Hello world.\nHow are you?");
+    }
+
+    #[test]
+    fn test_apply_transcription_breaks_word() {
+        let text = "Hello world how are you";
+        let result = apply_transcription_breaks(text, TranscriptionBreakMode::Word);
+        assert_eq!(result, "Hello\nworld\nhow\nare\nyou");
+    }
+
+    #[test]
+    fn test_apply_transcription_breaks_empty() {
+        let text = "   ";
+        let result = apply_transcription_breaks(text, TranscriptionBreakMode::Sentence);
+        assert_eq!(result, "");
     }
 }

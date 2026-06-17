@@ -21,8 +21,17 @@ use crate::audio_toolkit::{
 
 enum Cmd {
     Start,
-    Stop(mpsc::Sender<Vec<f32>>),
+    Stop(mpsc::Sender<RecordingResult>),
     Shutdown,
+}
+
+/// Result of a recording session.
+///
+/// `samples` contains the full 16 kHz mono audio. `segments` lists sample
+/// ranges of detected speech segments, based on VAD state transitions.
+pub struct RecordingResult {
+    pub samples: Vec<f32>,
+    pub segments: Vec<(usize, usize)>,
 }
 
 enum AudioChunk {
@@ -202,12 +211,12 @@ impl AudioRecorder {
         Ok(())
     }
 
-    pub fn stop(&self) -> Result<Vec<f32>, Box<dyn std::error::Error>> {
+    pub fn stop(&self) -> Result<RecordingResult, Box<dyn std::error::Error>> {
         let (resp_tx, resp_rx) = mpsc::channel();
         if let Some(tx) = &self.cmd_tx {
             tx.send(Cmd::Stop(resp_tx))?;
         }
-        Ok(resp_rx.recv()?) // wait for the samples
+        Ok(resp_rx.recv()?) // wait for the result
     }
 
     pub fn close(&mut self) -> Result<(), Box<dyn std::error::Error>> {
@@ -407,6 +416,8 @@ fn run_consumer(
     );
 
     let mut processed_samples = Vec::<f32>::new();
+    let mut speech_segments: Vec<(usize, usize)> = Vec::new();
+    let mut current_segment_start: Option<usize> = None;
     let mut recording = false;
 
     // ---------- spectrum visualisation setup ---------------------------- //
@@ -420,24 +431,30 @@ fn run_consumer(
         4000.0, // vocal_max_hz
     );
 
+    /// Processes one resampled frame and appends any speech audio to `out_buf`.
+    /// Returns `true` if the frame was classified as speech.
     fn handle_frame(
         samples: &[f32],
         recording: bool,
         vad: &Option<Arc<Mutex<Box<dyn vad::VoiceActivityDetector>>>>,
         out_buf: &mut Vec<f32>,
-    ) {
+    ) -> bool {
         if !recording {
-            return;
+            return false;
         }
 
         if let Some(vad_arc) = vad {
             let mut det = vad_arc.lock().unwrap();
             match det.push_frame(samples).unwrap_or(VadFrame::Speech(samples)) {
-                VadFrame::Speech(buf) => out_buf.extend_from_slice(buf),
-                VadFrame::Noise => {}
+                VadFrame::Speech(buf) => {
+                    out_buf.extend_from_slice(buf);
+                    true
+                }
+                VadFrame::Noise => false,
             }
         } else {
             out_buf.extend_from_slice(samples);
+            true
         }
     }
 
@@ -461,7 +478,17 @@ fn run_consumer(
 
         // ---------- existing pipeline ------------------------------------ //
         frame_resampler.push(&raw, &mut |frame: &[f32]| {
-            handle_frame(frame, recording, &vad, &mut processed_samples)
+            let start_len = processed_samples.len();
+            let is_speech = handle_frame(frame, recording, &vad, &mut processed_samples);
+            if is_speech {
+                if current_segment_start.is_none() {
+                    current_segment_start = Some(start_len);
+                }
+            } else if let Some(start) = current_segment_start.take() {
+                if start < processed_samples.len() {
+                    speech_segments.push((start, processed_samples.len()));
+                }
+            }
         });
 
         // non-blocking check for a command
@@ -470,6 +497,8 @@ fn run_consumer(
                 Cmd::Start => {
                     stop_flag.store(false, Ordering::Relaxed);
                     processed_samples.clear();
+                    speech_segments.clear();
+                    current_segment_start = None;
                     recording = true;
                     visualizer.reset();
                     if let Some(v) = &vad {
@@ -488,7 +517,18 @@ fn run_consumer(
                         match sample_rx.recv_timeout(Duration::from_secs(2)) {
                             Ok(AudioChunk::Samples(remaining)) => {
                                 frame_resampler.push(&remaining, &mut |frame: &[f32]| {
-                                    handle_frame(frame, true, &vad, &mut processed_samples)
+                                    let start_len = processed_samples.len();
+                                    let is_speech =
+                                        handle_frame(frame, true, &vad, &mut processed_samples);
+                                    if is_speech {
+                                        if current_segment_start.is_none() {
+                                            current_segment_start = Some(start_len);
+                                        }
+                                    } else if let Some(start) = current_segment_start.take() {
+                                        if start < processed_samples.len() {
+                                            speech_segments.push((start, processed_samples.len()));
+                                        }
+                                    }
                                 });
                             }
                             Ok(AudioChunk::EndOfStream) => break,
@@ -500,10 +540,30 @@ fn run_consumer(
                     }
 
                     frame_resampler.finish(&mut |frame: &[f32]| {
-                        handle_frame(frame, true, &vad, &mut processed_samples)
+                        let start_len = processed_samples.len();
+                        let is_speech = handle_frame(frame, true, &vad, &mut processed_samples);
+                        if is_speech {
+                            if current_segment_start.is_none() {
+                                current_segment_start = Some(start_len);
+                            }
+                        } else if let Some(start) = current_segment_start.take() {
+                            if start < processed_samples.len() {
+                                speech_segments.push((start, processed_samples.len()));
+                            }
+                        }
                     });
 
-                    let _ = reply_tx.send(std::mem::take(&mut processed_samples));
+                    // Close any speech segment that reaches the end of the recording.
+                    if let Some(start) = current_segment_start.take() {
+                        if start < processed_samples.len() {
+                            speech_segments.push((start, processed_samples.len()));
+                        }
+                    }
+
+                    let _ = reply_tx.send(RecordingResult {
+                        samples: std::mem::take(&mut processed_samples),
+                        segments: std::mem::take(&mut speech_segments),
+                    });
 
                     // Resume the audio callback so the consumer loop can continue
                     // receiving chunks (important for always-on microphone mode).

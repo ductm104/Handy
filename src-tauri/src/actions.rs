@@ -1,7 +1,9 @@
 #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
 use crate::apple_intelligence;
 use crate::audio_feedback::{play_feedback_sound, play_feedback_sound_blocking, SoundType};
-use crate::audio_toolkit::{is_microphone_access_denied, is_no_input_device_error};
+use crate::audio_toolkit::{
+    apply_transcription_breaks, is_microphone_access_denied, is_no_input_device_error,
+};
 use crate::managers::audio::AudioRecordingManager;
 use crate::managers::history::HistoryManager;
 use crate::managers::transcription::TranscriptionManager;
@@ -379,6 +381,12 @@ pub(crate) async fn process_transcription_output(
         post_processed_text = Some(final_text.clone());
     }
 
+    // Apply readability breaks based on user preference
+    final_text = apply_transcription_breaks(&final_text, settings.transcription_break_mode);
+    if let Some(ref mut ppt) = post_processed_text {
+        *ppt = apply_transcription_breaks(ppt, settings.transcription_break_mode);
+    }
+
     ProcessedTranscription {
         final_text,
         post_processed_text,
@@ -521,31 +529,35 @@ impl ShortcutAction for TranscribeAction {
             );
 
             let stop_recording_time = Instant::now();
-            if let Some(samples) = rm.stop_recording(&binding_id) {
+            if let Some(recording) = rm.stop_recording(&binding_id) {
                 debug!(
-                    "Recording stopped and samples retrieved in {:?}, sample count: {}",
+                    "Recording stopped and samples retrieved in {:?}, sample count: {}, segments: {}",
                     stop_recording_time.elapsed(),
-                    samples.len()
+                    recording.samples.len(),
+                    recording.segments.len()
                 );
 
-                if samples.is_empty() {
+                if recording.samples.is_empty() {
                     debug!("Recording produced no audio samples; skipping persistence");
                     utils::hide_recording_overlay(&ah);
                     change_tray_icon(&ah, TrayIconState::Idle);
                 } else {
                     // Save WAV concurrently with transcription
-                    let sample_count = samples.len();
+                    let sample_count = recording.samples.len();
                     let file_name = format!("hanhcute-{}.wav", chrono::Utc::now().timestamp());
                     let wav_path = hm.recordings_dir().join(&file_name);
                     let wav_path_for_verify = wav_path.clone();
-                    let samples_for_wav = samples.clone();
+                    let samples_for_wav = recording.samples.clone();
                     let wav_handle = tauri::async_runtime::spawn_blocking(move || {
                         crate::audio_toolkit::save_wav_file(&wav_path, &samples_for_wav)
                     });
 
-                    // Transcribe concurrently with WAV save
+                    // Transcribe each detected speech segment separately. This inserts
+                    // newlines at natural speech pauses and resets Whisper context
+                    // between segments to reduce hallucination carry-over.
                     let transcription_time = Instant::now();
-                    let transcription_result = tm.transcribe(samples);
+                    let transcription_result =
+                        tm.transcribe_segments(recording.samples, recording.segments);
 
                     // Await WAV save and verify
                     let wav_saved = match wav_handle.await {

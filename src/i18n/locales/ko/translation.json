@@ -368,6 +368,15 @@
         "add": "추가",
         "remove": "{{word}} 제거",
         "duplicate": "\"{{word}}\"이(가) 이미 존재합니다"
+      },
+      "transcriptionBreakMode": {
+        "title": "Transcription Breaks",
+        "description": "Choose how to split transcribed text for readability.",
+        "options": {
+          "none": "No extra breaks",
+          "sentence": "Break by sentence",
+          "word": "Break by word"
+        }
       }
     },
     "postProcessing": {

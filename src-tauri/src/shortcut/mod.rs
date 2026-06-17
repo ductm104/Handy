@@ -23,7 +23,7 @@ use tauri_plugin_autostart::ManagerExt;
 use crate::settings::APPLE_INTELLIGENCE_DEFAULT_MODEL_ID;
 use crate::settings::{
     self, get_settings, AutoSubmitKey, ClipboardHandling, KeyboardImplementation, LLMPrompt,
-    OverlayPosition, PasteMethod, ShortcutBinding, SoundTheme, TypingTool,
+    OverlayPosition, PasteMethod, ShortcutBinding, SoundTheme, TranscriptionBreakMode, TypingTool,
     APPLE_INTELLIGENCE_PROVIDER_ID,
 };
 use crate::tray;
@@ -1038,6 +1038,18 @@ pub fn change_mute_while_recording_setting(app: AppHandle, enabled: bool) -> Res
 pub fn change_append_trailing_space_setting(app: AppHandle, enabled: bool) -> Result<(), String> {
     let mut settings = settings::get_settings(&app);
     settings.append_trailing_space = enabled;
+    settings::write_settings(&app, settings);
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn change_transcription_break_mode_setting(
+    app: AppHandle,
+    mode: TranscriptionBreakMode,
+) -> Result<(), String> {
+    let mut settings = settings::get_settings(&app);
+    settings.transcription_break_mode = mode;
     settings::write_settings(&app, settings);
     Ok(())
 }

@@ -103,3 +103,9 @@ impl VoiceActivityDetector for SmoothedVad {
         self.temp_out.clear();
     }
 }
+
+impl SmoothedVad {
+    pub fn is_in_speech(&self) -> bool {
+        self.in_speech
+    }
+}

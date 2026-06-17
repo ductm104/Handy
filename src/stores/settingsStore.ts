@@ -6,6 +6,7 @@ import type {
   AudioDevice,
   WhisperAcceleratorSetting,
   OrtAcceleratorSetting,
+  TranscriptionBreakMode,
 } from "@/bindings";
 import { commands } from "@/bindings";
 
@@ -135,6 +136,10 @@ const settingUpdaters: {
     commands.changeMuteWhileRecordingSetting(value as boolean),
   append_trailing_space: (value) =>
     commands.changeAppendTrailingSpaceSetting(value as boolean),
+  transcription_break_mode: (value) =>
+    commands.changeTranscriptionBreakModeSetting(
+      value as TranscriptionBreakMode,
+    ),
   log_level: (value) => commands.setLogLevel(value as any),
   app_language: (value) => commands.changeAppLanguageSetting(value as string),
   experimental_enabled: (value) =>
