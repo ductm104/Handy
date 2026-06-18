@@ -303,6 +303,13 @@ impl WhisperEngine {
         full_params.set_suppress_nst(params.suppress_non_speech_tokens);
         full_params.set_no_speech_thold(params.no_speech_thold);
         full_params.set_no_context(no_context);
+        // Shorten the rolling text-context fed back between consecutive 30-second
+        // windows within a single call. The whisper.cpp default (16384) is effectively
+        // unbounded and lets a hallucination from one window propagate to the next.
+        // 64 tokens (~1 sentence) keeps windows largely independent while preserving
+        // minimal continuity. initial_prompt (custom words) is unaffected — it is
+        // injected via prompt_init, not the history budget.
+        full_params.set_n_max_text_ctx(64);
         if params.n_threads > 0 {
             full_params.set_n_threads(params.n_threads);
         }
@@ -790,7 +797,7 @@ impl TranscriptionManager {
     }
 
     pub fn transcribe(&self, audio: Vec<f32>) -> Result<String> {
-        self.transcribe_inner(&audio, None, false, false, 0.0, TimestampMode::Plain)
+        self.transcribe_inner(&audio, None, false, true, 0.0, TimestampMode::Plain)
     }
 
     /// Transcribes each detected speech segment separately and joins the
@@ -819,7 +826,7 @@ impl TranscriptionManager {
         if segments.len() == 1 {
             let (start, end) = segments[0];
             if start == 0 && end >= audio.len().saturating_sub(1) {
-                return self.transcribe_inner(&audio, None, false, false, 0.0, timestamp_mode);
+                return self.transcribe_inner(&audio, None, false, true, 0.0, timestamp_mode);
             }
         }
 
@@ -864,7 +871,7 @@ impl TranscriptionManager {
             &audio,
             progress_callback,
             false,
-            false,
+            true,
             0.0,
             TimestampMode::Plain,
         )
