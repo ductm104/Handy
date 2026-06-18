@@ -3,7 +3,7 @@ use crate::managers::history::{HistoryEntry, HistoryManager};
 use crate::managers::transcription::{
     TranscriptionManager, TranscriptionProgress, TranscriptionProgressCallback,
 };
-use crate::settings::{get_settings, write_settings, ModelUnloadTimeout, TimestampMode};
+use crate::settings::{get_settings, write_settings, ModelUnloadTimeout};
 use serde::Serialize;
 use specta::Type;
 use std::path::PathBuf;
@@ -139,7 +139,7 @@ pub async fn transcribe_file(
         };
 
     let settings = get_settings(&app);
-    let apply_timestamps = settings.timestamp_mode == TimestampMode::Timestamp;
+    let timestamp_mode = settings.timestamp_mode;
     let sample_rate = crate::audio_toolkit::constants::WHISPER_SAMPLE_RATE as f64;
 
     let streaming_result =
@@ -282,7 +282,7 @@ pub async fn transcribe_file(
                             true,
                             true,
                             base_offset,
-                            apply_timestamps,
+                            timestamp_mode,
                         )
                         .map_err(|e| format!("Transcription failed: {}", e))?;
                     if !text.is_empty() {
@@ -330,7 +330,7 @@ pub async fn transcribe_file(
                         false,
                         true,
                         base_offset,
-                        apply_timestamps,
+                        timestamp_mode,
                     )
                     .map_err(|e| format!("Transcription failed: {}", e))?;
                 if !text.is_empty() {

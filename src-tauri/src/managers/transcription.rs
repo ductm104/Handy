@@ -69,6 +69,80 @@ pub fn format_timestamp_range(begin: f64, end: f64) -> String {
     )
 }
 
+/// Maximum wall-clock duration of a single grouped-timestamp block.
+///
+/// Consecutive segments whose combined span stays under this threshold are
+/// merged into one `[begin - end] text...` line. Once adding another segment
+/// would push the group past this length, a new block is started.
+const GROUP_TIMESTAMP_MAX_DURATION_SECS: f64 = 30.0;
+
+/// Silence gap (in seconds) that is treated as a paragraph break.
+///
+/// When the gap between the end of the previous segment and the start of the
+/// next one exceeds this value, a new grouped-timestamp block is started even
+/// if the maximum duration has not been reached yet.
+const GROUP_TIMESTAMP_PARAGRAPH_GAP_SECS: f64 = 1.5;
+
+/// Merge consecutive transcription segments into paragraph-sized blocks and
+/// prefix each block with a single continuous `[hh:mm:ss - hh:mm:ss]` range.
+///
+/// The range of every block is continuous: it starts at the first segment's
+/// begin time and ends at the last segment's end time, so the timeline flows
+/// naturally from one block to the next without overlaps or holes.
+fn group_segments_with_timestamps(
+    segs: &[TranscriptionSegment],
+    base_offset_seconds: f64,
+) -> String {
+    // Each group: (begin, end, joined_texts).
+    let mut groups: Vec<(f64, f64, Vec<String>)> = Vec::new();
+
+    for s in segs {
+        let text = s.text.trim();
+        if text.is_empty() {
+            continue;
+        }
+
+        let seg_begin = base_offset_seconds + s.start as f64;
+        let seg_end = base_offset_seconds + s.end as f64;
+        if seg_end <= seg_begin {
+            continue;
+        }
+
+        // Decide whether to append to the current group or start a new one.
+        let start_new = match groups.last_mut() {
+            None => true,
+            Some((g_begin, g_end, texts)) => {
+                let gap = (seg_begin - *g_end).max(0.0);
+                let new_duration = seg_end - *g_begin;
+                if gap > GROUP_TIMESTAMP_PARAGRAPH_GAP_SECS
+                    || new_duration > GROUP_TIMESTAMP_MAX_DURATION_SECS
+                {
+                    true
+                } else {
+                    // Extend the continuous range; guard against any overlap by
+                    // taking the max of the current end and the segment end so
+                    // the recorded range stays monotonic and gap-free.
+                    *g_end = g_end.max(seg_end);
+                    texts.push(text.to_string());
+                    false
+                }
+            }
+        };
+
+        if start_new {
+            groups.push((seg_begin, seg_end, vec![text.to_string()]));
+        }
+    }
+
+    groups
+        .into_iter()
+        .map(|(begin, end, texts)| {
+            format!("{} {}", format_timestamp_range(begin, end), texts.join(" "))
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
 struct WhisperEngine {
     state: whisper_rs::WhisperState,
     #[allow(dead_code)]
@@ -716,7 +790,7 @@ impl TranscriptionManager {
     }
 
     pub fn transcribe(&self, audio: Vec<f32>) -> Result<String> {
-        self.transcribe_inner(&audio, None, false, false, 0.0, false)
+        self.transcribe_inner(&audio, None, false, false, 0.0, TimestampMode::Plain)
     }
 
     /// Transcribes each detected speech segment separately and joins the
@@ -724,7 +798,9 @@ impl TranscriptionManager {
     /// segments, which reduces hallucination carry-over across long pauses.
     ///
     /// When timestamp mode is enabled, each sentence-level segment is prefixed
-    /// with its audio position as `[hh:mm:ss - hh:mm:ss]`.
+    /// with its audio position as `[hh:mm:ss - hh:mm:ss]`. In `GroupTimestamp`
+    /// mode consecutive segments are merged into continuous paragraph-sized
+    /// blocks so the output is not fragmented.
     pub fn transcribe_segments(
         &self,
         audio: Vec<f32>,
@@ -735,7 +811,7 @@ impl TranscriptionManager {
         }
 
         let settings = get_settings(&self.app_handle);
-        let apply_timestamps = settings.timestamp_mode == TimestampMode::Timestamp;
+        let timestamp_mode = settings.timestamp_mode;
         let sample_rate = crate::audio_toolkit::constants::WHISPER_SAMPLE_RATE as f64;
 
         // Fall back to a single inference when there is only one speech segment
@@ -743,7 +819,7 @@ impl TranscriptionManager {
         if segments.len() == 1 {
             let (start, end) = segments[0];
             if start == 0 && end >= audio.len().saturating_sub(1) {
-                return self.transcribe_inner(&audio, None, false, false, 0.0, apply_timestamps);
+                return self.transcribe_inner(&audio, None, false, false, 0.0, timestamp_mode);
             }
         }
 
@@ -765,7 +841,7 @@ impl TranscriptionManager {
                 skip_unload,
                 true,
                 base_offset,
-                apply_timestamps,
+                timestamp_mode,
             ) {
                 Ok(text) if !text.is_empty() => texts.push(text),
                 Ok(_) => {}
@@ -784,7 +860,14 @@ impl TranscriptionManager {
         audio: Vec<f32>,
         progress_callback: Option<TranscriptionProgressCallback>,
     ) -> Result<String> {
-        self.transcribe_inner(&audio, progress_callback, false, false, 0.0, false)
+        self.transcribe_inner(
+            &audio,
+            progress_callback,
+            false,
+            false,
+            0.0,
+            TimestampMode::Plain,
+        )
     }
 
     pub fn transcribe_chunk_with_progress(
@@ -794,7 +877,7 @@ impl TranscriptionManager {
         skip_immediate_unload: bool,
         no_context: bool,
         base_offset_seconds: f64,
-        apply_timestamps: bool,
+        timestamp_mode: TimestampMode,
     ) -> Result<String> {
         self.transcribe_inner(
             audio,
@@ -802,7 +885,7 @@ impl TranscriptionManager {
             skip_immediate_unload,
             no_context,
             base_offset_seconds,
-            apply_timestamps,
+            timestamp_mode,
         )
     }
 
@@ -813,7 +896,7 @@ impl TranscriptionManager {
         skip_immediate_unload: bool,
         no_context: bool,
         base_offset_seconds: f64,
-        apply_timestamps: bool,
+        timestamp_mode: TimestampMode,
     ) -> Result<String> {
         #[cfg(debug_assertions)]
         if std::env::var("HANHCUTE_FORCE_TRANSCRIPTION_FAILURE").is_ok() {
@@ -1075,10 +1158,10 @@ impl TranscriptionManager {
         };
 
         // Reconstruct text from segment-level data for better sentence line breaks.
-        // When timestamp mode is on, use each segment's engine-local start/end
+        // When a timestamp mode is on, use each segment's engine-local start/end
         // plus the audio offset of the current chunk.
-        let segments_text = if apply_timestamps {
-            result.segments.as_ref().and_then(|segs| {
+        let segments_text = match timestamp_mode {
+            TimestampMode::Timestamp => result.segments.as_ref().and_then(|segs| {
                 if segs.is_empty() {
                     return None;
                 }
@@ -1101,9 +1184,19 @@ impl TranscriptionManager {
                 } else {
                     Some(text)
                 }
-            })
-        } else {
-            result.segments.as_ref().map(|segs| {
+            }),
+            TimestampMode::GroupTimestamp => result.segments.as_ref().and_then(|segs| {
+                if segs.is_empty() {
+                    return None;
+                }
+                let text = group_segments_with_timestamps(segs, base_offset_seconds);
+                if text.is_empty() {
+                    None
+                } else {
+                    Some(text)
+                }
+            }),
+            TimestampMode::Plain => result.segments.as_ref().map(|segs| {
                 if segs.is_empty() {
                     String::new()
                 } else {
@@ -1113,12 +1206,13 @@ impl TranscriptionManager {
                         .collect::<Vec<_>>()
                         .join("\n")
                 }
-            })
+            }),
         };
 
+        let timestamps_enabled = timestamp_mode != TimestampMode::Plain;
         let raw_text = match segments_text {
             Some(t) if !t.is_empty() => t,
-            _ if apply_timestamps => {
+            _ if timestamps_enabled => {
                 // Fallback when the engine did not return per-segment timestamps:
                 // stamp the whole chunk with its audio range.
                 let duration = audio.len() as f64

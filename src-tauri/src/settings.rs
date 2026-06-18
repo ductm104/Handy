@@ -168,6 +168,11 @@ pub enum TimestampMode {
     #[default]
     Plain,
     Timestamp,
+    /// Like `Timestamp` but consecutive segments are merged into continuous
+    /// paragraph-sized groups so the output is not fragmented. Each group is
+    /// prefixed with a single `[hh:mm:ss - hh:mm:ss]` range covering every
+    /// segment it contains.
+    GroupTimestamp,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Type)]

@@ -24,6 +24,10 @@ export const TimestampModeSetting: React.FC<TimestampModeProps> = React.memo(
         value: "timestamp",
         label: t("settings.advanced.timestampMode.options.timestamp"),
       },
+      {
+        value: "group_timestamp",
+        label: t("settings.advanced.timestampMode.options.groupTimestamp"),
+      },
     ];
 
     const selectedMode = (getSetting("timestamp_mode") || "plain") as string;

@@ -385,7 +385,8 @@
         "description": "Choose whether to include a [hh:mm:ss] timestamp before each transcribed segment.",
         "options": {
           "plain": "Plain Text",
-          "timestamp": "With Timestamp"
+          "timestamp": "With Timestamp",
+          "groupTimestamp": "Grouped Timestamp"
         }
       }
     },

@@ -879,7 +879,14 @@ export type RecordingRetentionPeriod = "never" | "preserve_limit" | "days_3" | "
 export type SecretMap = Partial<{ [key in string]: string }>
 export type ShortcutBinding = { id: string; name: string; description: string; default_binding: string; current_binding: string }
 export type SoundTheme = "marimba" | "pop" | "custom"
-export type TimestampMode = "plain" | "timestamp"
+export type TimestampMode = "plain" | "timestamp" | 
+/**
+ * Like `Timestamp` but consecutive segments are merged into continuous
+ * paragraph-sized groups so the output is not fragmented. Each group is
+ * prefixed with a single `[hh:mm:ss - hh:mm:ss]` range covering every
+ * segment it contains.
+ */
+"group_timestamp"
 export type TranscriptionBreakMode = "none" | "sentence" | "word"
 export type TypingTool = "auto" | "wtype" | "kwtype" | "dotool" | "ydotool" | "xdotool"
 export type WhisperAcceleratorSetting = "auto" | "cpu" | "gpu"
