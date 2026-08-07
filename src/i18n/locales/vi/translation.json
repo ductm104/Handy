@@ -5,7 +5,8 @@
     "unloadModel": "Dỡ mô hình",
     "model": "Mô hình",
     "quit": "Thoát",
-    "cancel": "Hủy"
+    "cancel": "Hủy",
+    "checkUpdates": "Kiểm tra cập nhật..."
   },
   "sidebar": {
     "general": "Chung",
@@ -524,6 +525,10 @@
       "recordingBuffer": {
         "title": "Bộ đệm ghi âm thêm",
         "description": "Thời gian thêm (tính bằng mili giây) để tiếp tục ghi âm sau khi nhả phím, để thu âm thanh cuối. 0 = không có bộ đệm thêm."
+      },
+      "updateChecks": {
+        "label": "Kiểm tra cập nhật",
+        "description": "Tự động kiểm tra phiên bản mới của Handy"
       }
     },
     "about": {
@@ -559,7 +564,19 @@
   "footer": {
     "downloadingModel": "Đang tải {{model}}...",
     "restart": "Khởi động lại",
-    "downloading": "Đang tải... {{progress}}%"
+    "downloading": "Đang tải... {{progress}}%",
+    "checkingUpdates": "Đang kiểm tra cập nhật...",
+    "updateAvailable": "Có bản cập nhật: {{version}}",
+    "updateAvailableShort": "Có bản cập nhật",
+    "upToDate": "Đã cập nhật",
+    "downloadUpdate": "Tải cập nhật",
+    "updateCheckingDisabled": "Đã tắt kiểm tra cập nhật",
+    "installing": "Đang cài đặt...",
+    "preparing": "Đang chuẩn bị...",
+    "checkForUpdates": "Kiểm tra cập nhật",
+    "portableUpdateTitle": "Manual update required",
+    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, saved audio) from the old version to the new one.",
+    "portableUpdateButton": "Open GitHub Releases"
   },
   "common": {
     "loading": "Đang tải...",

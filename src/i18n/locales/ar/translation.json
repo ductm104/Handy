@@ -5,7 +5,8 @@
     "unloadModel": "تفريغ النموذج",
     "model": "النموذج",
     "quit": "إنهاء",
-    "cancel": "إلغاء"
+    "cancel": "إلغاء",
+    "checkUpdates": "...التحقق من وجود تحديثات"
   },
   "sidebar": {
     "general": "عام",
@@ -502,6 +503,10 @@
       "recordingBuffer": {
         "title": "مخزن التسجيل الإضافي",
         "description": "وقت إضافي (بالمللي ثانية) للاستمرار في التسجيل بعد تحرير المفتاح، لالتقاط الصوت المتبقي. 0 = لا مخزن إضافي."
+      },
+      "updateChecks": {
+        "label": "التحقق من وجود تحديثات",
+        "description": "التحقق تلقائياً من وجود إصدارات جديدة من Handy"
       }
     },
     "about": {
@@ -559,7 +564,19 @@
   "footer": {
     "downloadingModel": "...جاري تنزيل {{model}}",
     "restart": "إعادة تشغيل",
-    "downloading": "...جاري التنزيل {{progress}}%"
+    "downloading": "...جاري التنزيل {{progress}}%",
+    "checkingUpdates": "...جاري التحقق من وجود تحديثات",
+    "updateAvailable": "تحديث متاح: {{version}}",
+    "updateAvailableShort": "تحديث متاح",
+    "upToDate": "محدث",
+    "downloadUpdate": "تنزيل التحديث",
+    "updateCheckingDisabled": "تم تعطيل التحقق من التحديث",
+    "installing": "...جاري التثبيت",
+    "preparing": "...جاري التحضير",
+    "checkForUpdates": "التحقق من وجود تحديثات",
+    "portableUpdateTitle": "Manual update required",
+    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, saved audio) from the old version to the new one.",
+    "portableUpdateButton": "Open GitHub Releases"
   },
   "common": {
     "loading": "...جاري التحميل",

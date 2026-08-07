@@ -5,7 +5,8 @@
     "unloadModel": "Avlasta modell",
     "model": "Modell",
     "quit": "Avsluta",
-    "cancel": "Avbryt"
+    "cancel": "Avbryt",
+    "checkUpdates": "Sök efter uppdateringar..."
   },
   "sidebar": {
     "general": "Allmänt",
@@ -524,6 +525,10 @@
       "recordingBuffer": {
         "title": "Extra inspelningsbuffert",
         "description": "Extra tid (i millisekunder) för att fortsätta spela in efter att du släppt tangenten, för att fånga upp avslutande ljud. 0 = ingen extra buffert."
+      },
+      "updateChecks": {
+        "label": "Sök efter uppdateringar",
+        "description": "Sök automatiskt efter nya versioner av Handy"
       }
     },
     "about": {
@@ -559,7 +564,19 @@
   "footer": {
     "downloadingModel": "Laddar ner {{model}}...",
     "restart": "Starta om",
-    "downloading": "Laddar ner... {{progress}}%"
+    "downloading": "Laddar ner... {{progress}}%",
+    "checkingUpdates": "Söker efter uppdateringar...",
+    "updateAvailable": "Uppdatering tillgänglig: {{version}}",
+    "updateAvailableShort": "Uppdatering tillgänglig",
+    "upToDate": "Uppdaterad",
+    "downloadUpdate": "Ladda ner uppdatering",
+    "updateCheckingDisabled": "Uppdateringskontroll inaktiverad",
+    "installing": "Installerar...",
+    "preparing": "Förbereder...",
+    "checkForUpdates": "Sök efter uppdateringar",
+    "portableUpdateTitle": "Manual update required",
+    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, saved audio) from the old version to the new one.",
+    "portableUpdateButton": "Open GitHub Releases"
   },
   "common": {
     "loading": "Laddar...",

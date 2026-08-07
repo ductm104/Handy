@@ -5,7 +5,8 @@
     "unloadModel": "Rilascia modello",
     "model": "Modello",
     "quit": "Esci",
-    "cancel": "Annulla"
+    "cancel": "Annulla",
+    "checkUpdates": "Verifica aggiornamenti..."
   },
   "sidebar": {
     "general": "Generale",
@@ -524,6 +525,10 @@
       "recordingBuffer": {
         "title": "Buffer di registrazione extra",
         "description": "Tempo extra (in millisecondi) per continuare a registrare dopo aver rilasciato il tasto, per catturare l'audio finale. 0 = nessun buffer extra."
+      },
+      "updateChecks": {
+        "label": "Controlla aggiornamenti",
+        "description": "Controlla automaticamente la disponibilità di nuove versioni di Handy"
       }
     },
     "about": {
@@ -559,7 +564,19 @@
   "footer": {
     "downloadingModel": "Download di {{model}}...",
     "restart": "Riavvia",
-    "downloading": "Download... {{progress}}%"
+    "downloading": "Download... {{progress}}%",
+    "checkingUpdates": "Controllo aggiornamenti...",
+    "updateAvailable": "Aggiornamento disponibile: {{version}}",
+    "updateAvailableShort": "Aggiornamento disponibile",
+    "upToDate": "Aggiornato",
+    "downloadUpdate": "Scarica Aggiornamento",
+    "updateCheckingDisabled": "Controllo Aggiornamenti Disabilitato",
+    "installing": "Installazione...",
+    "preparing": "Preparazione...",
+    "checkForUpdates": "Controlla aggiornamenti",
+    "portableUpdateTitle": "Aggiornamento manuale necessario",
+    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, saved audio) from the old version to the new one.",
+    "portableUpdateButton": "Apri i rilasci su GitHub"
   },
   "common": {
     "loading": "Caricamento...",

@@ -5,7 +5,8 @@
     "unloadModel": "卸載模型",
     "model": "模型",
     "quit": "結束",
-    "cancel": "取消"
+    "cancel": "取消",
+    "checkUpdates": "檢查更新..."
   },
   "sidebar": {
     "general": "一般",
@@ -524,6 +525,10 @@
       "recordingBuffer": {
         "title": "額外錄音緩衝",
         "description": "放開按鍵後繼續錄音的額外時間（毫秒），以捕捉尾音。0 = 無額外緩衝。"
+      },
+      "updateChecks": {
+        "label": "檢查更新",
+        "description": "自動檢查 Handy 的新版本"
       }
     },
     "about": {
@@ -559,7 +564,19 @@
   "footer": {
     "downloadingModel": "正在下載 {{model}}...",
     "restart": "重新啟動",
-    "downloading": "下載中... {{progress}}%"
+    "downloading": "下載中... {{progress}}%",
+    "checkingUpdates": "檢查更新中...",
+    "updateAvailable": "有可用更新: {{version}}",
+    "updateAvailableShort": "有可用更新",
+    "upToDate": "已是最新版本",
+    "downloadUpdate": "下載更新",
+    "updateCheckingDisabled": "更新檢查已停用",
+    "installing": "安裝中...",
+    "preparing": "準備中...",
+    "checkForUpdates": "檢查更新",
+    "portableUpdateTitle": "Manual update required",
+    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, saved audio) from the old version to the new one.",
+    "portableUpdateButton": "Open GitHub Releases"
   },
   "common": {
     "loading": "載入中...",

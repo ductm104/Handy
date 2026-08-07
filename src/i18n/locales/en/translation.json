@@ -5,7 +5,8 @@
     "unloadModel": "Unload Model",
     "model": "Model",
     "quit": "Quit",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "checkUpdates": "Check for Updates..."
   },
   "sidebar": {
     "general": "General",
@@ -535,6 +536,10 @@
       "recordingBuffer": {
         "title": "Extra Recording Buffer",
         "description": "Extra time (in milliseconds) to keep recording after you release the key, to capture trailing audio. 0 = no extra buffer."
+      },
+      "updateChecks": {
+        "label": "Check for Updates",
+        "description": "Automatically check for new versions of HanhCute"
       }
     },
     "about": {
@@ -570,7 +575,19 @@
   "footer": {
     "downloadingModel": "Downloading {{model}}...",
     "downloading": "Downloading... {{progress}}%",
-    "restart": "Restart"
+    "restart": "Restart",
+    "checkingUpdates": "Checking for updates...",
+    "updateAvailable": "Update available: {{version}}",
+    "updateAvailableShort": "Update available",
+    "upToDate": "Up to date",
+    "downloadUpdate": "Download Update",
+    "updateCheckingDisabled": "Update Checking Disabled",
+    "installing": "Installing...",
+    "preparing": "Preparing...",
+    "checkForUpdates": "Check for updates",
+    "portableUpdateTitle": "Manual update required",
+    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, saved audio) from the old version to the new one.",
+    "portableUpdateButton": "Open GitHub Releases"
   },
   "common": {
     "loading": "Loading...",

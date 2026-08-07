@@ -5,7 +5,8 @@
     "unloadModel": "Modeli boşalt",
     "model": "Model",
     "quit": "Çıkış",
-    "cancel": "İptal"
+    "cancel": "İptal",
+    "checkUpdates": "Güncellemeleri Kontrol Et..."
   },
   "sidebar": {
     "general": "Genel",
@@ -524,6 +525,10 @@
       "recordingBuffer": {
         "title": "Ekstra kayıt tamponu",
         "description": "Tuşu bıraktıktan sonra arka plandaki sesi yakalamak için kaydı sürdürme süresi (milisaniye). 0 = ekstra tampon yok."
+      },
+      "updateChecks": {
+        "label": "Güncellemeleri Kontrol Et",
+        "description": "Handy için yeni sürümleri otomatik olarak kontrol eder"
       }
     },
     "about": {
@@ -559,7 +564,19 @@
   "footer": {
     "downloadingModel": "{{model}} indiriliyor...",
     "restart": "Yeniden Başlat",
-    "downloading": "İndiriliyor... %{{progress}}"
+    "downloading": "İndiriliyor... %{{progress}}",
+    "checkingUpdates": "Güncellemeler kontrol ediliyor...",
+    "updateAvailable": "Güncelleme mevcut: {{version}}",
+    "updateAvailableShort": "Güncelleme mevcut",
+    "upToDate": "Güncel",
+    "downloadUpdate": "Güncellemeyi İndir",
+    "updateCheckingDisabled": "Güncelleme Kontrolü Devre Dışı",
+    "installing": "Yükleniyor...",
+    "preparing": "Hazırlanıyor...",
+    "checkForUpdates": "Güncellemeleri kontrol et",
+    "portableUpdateTitle": "Manual update required",
+    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, saved audio) from the old version to the new one.",
+    "portableUpdateButton": "Open GitHub Releases"
   },
   "common": {
     "loading": "Yükleniyor...",

@@ -5,7 +5,8 @@
     "unloadModel": "Uvolnit model",
     "model": "Model",
     "quit": "Ukončit",
-    "cancel": "Zrušit"
+    "cancel": "Zrušit",
+    "checkUpdates": "Zkontrolovat aktualizace..."
   },
   "sidebar": {
     "general": "Obecné",
@@ -524,6 +525,10 @@
       "recordingBuffer": {
         "title": "Extra vyrovnávací paměť nahrávání",
         "description": "Extra čas (v milisekundách) pro pokračování nahrávání po uvolnění klávesy, pro zachycení zbývajícího zvuku. 0 = žádná extra vyrovnávací paměť."
+      },
+      "updateChecks": {
+        "label": "Kontrolovat aktualizace",
+        "description": "Automaticky kontrolovat nové verze Handy"
       }
     },
     "about": {
@@ -559,7 +564,19 @@
   "footer": {
     "downloadingModel": "Stahuji {{model}}...",
     "restart": "Restartovat",
-    "downloading": "Stahování... {{progress}}%"
+    "downloading": "Stahování... {{progress}}%",
+    "checkingUpdates": "Kontroluji aktualizace...",
+    "updateAvailable": "Dostupná aktualizace: {{version}}",
+    "updateAvailableShort": "Dostupná aktualizace",
+    "upToDate": "Vše aktuální",
+    "downloadUpdate": "Stáhnout aktualizaci",
+    "updateCheckingDisabled": "Kontrola aktualizací vypnuta",
+    "installing": "Instalace...",
+    "preparing": "Příprava...",
+    "checkForUpdates": "Zkontrolovat aktualizace",
+    "portableUpdateTitle": "Manual update required",
+    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, saved audio) from the old version to the new one.",
+    "portableUpdateButton": "Open GitHub Releases"
   },
   "common": {
     "loading": "Načítání...",

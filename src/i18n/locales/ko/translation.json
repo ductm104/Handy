@@ -5,7 +5,8 @@
     "unloadModel": "모델 언로드",
     "model": "모델",
     "quit": "종료",
-    "cancel": "취소"
+    "cancel": "취소",
+    "checkUpdates": "업데이트 확인..."
   },
   "sidebar": {
     "general": "일반",
@@ -524,6 +525,10 @@
         "appData": "앱 데이터:",
         "models": "모델:",
         "settings": "설정:"
+      },
+      "updateChecks": {
+        "label": "업데이트 확인",
+        "description": "Handy의 새 버전을 자동으로 확인합니다"
       }
     },
     "about": {
@@ -559,7 +564,19 @@
   "footer": {
     "downloadingModel": "{{model}} 다운로드 중...",
     "restart": "재시작",
-    "downloading": "다운로드 중... {{progress}}%"
+    "downloading": "다운로드 중... {{progress}}%",
+    "checkingUpdates": "업데이트 확인 중...",
+    "updateAvailable": "업데이트 사용 가능: {{version}}",
+    "updateAvailableShort": "업데이트 사용 가능",
+    "upToDate": "최신 상태",
+    "downloadUpdate": "업데이트 다운로드",
+    "updateCheckingDisabled": "업데이트 확인 비활성화됨",
+    "installing": "설치 중...",
+    "preparing": "준비 중...",
+    "checkForUpdates": "업데이트 확인",
+    "portableUpdateTitle": "Manual update required",
+    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, saved audio) from the old version to the new one.",
+    "portableUpdateButton": "Open GitHub Releases"
   },
   "common": {
     "loading": "로딩 중...",

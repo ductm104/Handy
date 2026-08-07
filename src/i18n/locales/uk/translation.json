@@ -5,7 +5,8 @@
     "unloadModel": "Вивантажити модель",
     "model": "Модель",
     "quit": "Вийти",
-    "cancel": "Скасувати"
+    "cancel": "Скасувати",
+    "checkUpdates": "Перевірити оновлення..."
   },
   "sidebar": {
     "general": "Загальні",
@@ -524,6 +525,10 @@
       "recordingBuffer": {
         "title": "Додатковий буфер запису",
         "description": "Додатковий час (у мілісекундах) для продовження запису після відпускання клавіші, щоб захопити завершальний звук. 0 = без додаткового буфера."
+      },
+      "updateChecks": {
+        "label": "Перевірка оновлень",
+        "description": "Автоматично перевіряти наявність нових версій Handy"
       }
     },
     "about": {
@@ -559,7 +564,19 @@
   "footer": {
     "downloadingModel": "Завантаження {{model}}...",
     "restart": "Перезапустити",
-    "downloading": "Завантаження... {{progress}}%"
+    "downloading": "Завантаження... {{progress}}%",
+    "checkingUpdates": "Перевірка оновлень...",
+    "updateAvailable": "Доступне оновлення: {{version}}",
+    "updateAvailableShort": "Доступне оновлення",
+    "upToDate": "Актуальна версія",
+    "downloadUpdate": "Завантажити оновлення",
+    "updateCheckingDisabled": "Перевірка оновлень вимкнена",
+    "installing": "Встановлення...",
+    "preparing": "Підготовка...",
+    "checkForUpdates": "Перевірити оновлення",
+    "portableUpdateTitle": "Manual update required",
+    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, saved audio) from the old version to the new one.",
+    "portableUpdateButton": "Open GitHub Releases"
   },
   "common": {
     "loading": "Завантаження...",

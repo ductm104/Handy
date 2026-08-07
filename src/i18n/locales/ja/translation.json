@@ -5,7 +5,8 @@
     "unloadModel": "モデルをアンロード",
     "model": "モデル",
     "quit": "終了",
-    "cancel": "キャンセル"
+    "cancel": "キャンセル",
+    "checkUpdates": "アップデートを確認..."
   },
   "sidebar": {
     "general": "一般",
@@ -524,6 +525,10 @@
       "recordingBuffer": {
         "title": "追加録音バッファ",
         "description": "キーを離した後に録音を続ける追加時間（ミリ秒）。末尾の音声を捕捉するため。0 = 追加バッファなし。"
+      },
+      "updateChecks": {
+        "label": "アップデートを確認",
+        "description": "Handyの新しいバージョンを自動的にチェック"
       }
     },
     "about": {
@@ -559,7 +564,19 @@
   "footer": {
     "downloadingModel": "{{model}}をダウンロード中...",
     "restart": "再起動",
-    "downloading": "ダウンロード中... {{progress}}%"
+    "downloading": "ダウンロード中... {{progress}}%",
+    "checkingUpdates": "アップデートを確認中...",
+    "updateAvailable": "アップデートあり: {{version}}",
+    "updateAvailableShort": "アップデートあり",
+    "upToDate": "最新です",
+    "downloadUpdate": "アップデートをダウンロード",
+    "updateCheckingDisabled": "アップデート確認無効",
+    "installing": "インストール中...",
+    "preparing": "準備中...",
+    "checkForUpdates": "アップデートを確認",
+    "portableUpdateTitle": "Manual update required",
+    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, saved audio) from the old version to the new one.",
+    "portableUpdateButton": "Open GitHub Releases"
   },
   "common": {
     "loading": "読み込み中...",

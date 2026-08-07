@@ -89,6 +89,17 @@ BUILD_CACHE_DIR="$ROOT_DIR/.build-cache"
 mkdir -p "$BUILD_CACHE_DIR/clang-module-cache"
 export CLANG_MODULE_CACHE_PATH="${CLANG_MODULE_CACHE_PATH:-$BUILD_CACHE_DIR/clang-module-cache}"
 
+# Updater signing key — required for in-app auto-update.
+# Generate with: bun run tauri signer generate -w ~/.tauri/hanhcute_updater.key
+UPDATER_KEY_PATH="${TAURI_SIGNING_PRIVATE_KEY_PATH:-$HOME/.tauri/hanhcute_updater.key}"
+if [[ -f "$UPDATER_KEY_PATH" ]]; then
+  export TAURI_SIGNING_PRIVATE_KEY="${TAURI_SIGNING_PRIVATE_KEY:-$(cat "$UPDATER_KEY_PATH")}"
+  export TAURI_SIGNING_PRIVATE_KEY_PASSWORD="${TAURI_SIGNING_PRIVATE_KEY_PASSWORD:-hanhcute2024}"
+else
+  echo "Warning: Updater private key not found at $UPDATER_KEY_PATH" >&2
+  echo "  Generate with: bun run tauri signer generate -w $UPDATER_KEY_PATH" >&2
+fi
+
 if [[ "$RUN_DEV" == true ]]; then
   echo "Starting Tauri development mode..."
   CMAKE_POLICY_VERSION_MINIMUM="${CMAKE_POLICY_VERSION_MINIMUM:-3.5}" bun run tauri dev --config '{"identifier":"com.hanhcute.dev"}'

@@ -5,7 +5,8 @@
     "unloadModel": "Modell entladen",
     "model": "Modell",
     "quit": "Beenden",
-    "cancel": "Abbrechen"
+    "cancel": "Abbrechen",
+    "checkUpdates": "Nach Updates suchen..."
   },
   "sidebar": {
     "general": "Allgemein",
@@ -524,6 +525,10 @@
       "recordingBuffer": {
         "title": "Zusätzlicher Aufnahmepuffer",
         "description": "Zusätzliche Zeit (in Millisekunden), um nach dem Loslassen der Taste weiter aufzunehmen, um nachlaufendes Audio zu erfassen. 0 = kein zusätzlicher Puffer."
+      },
+      "updateChecks": {
+        "label": "Nach Updates suchen",
+        "description": "Automatisch nach neuen Versionen von Handy suchen"
       }
     },
     "about": {
@@ -559,7 +564,19 @@
   "footer": {
     "downloadingModel": "Lade {{model}} herunter...",
     "restart": "Neustart",
-    "downloading": "Wird heruntergeladen... {{progress}}%"
+    "downloading": "Wird heruntergeladen... {{progress}}%",
+    "checkingUpdates": "Suche nach Updates...",
+    "updateAvailable": "Update verfügbar: {{version}}",
+    "updateAvailableShort": "Update verfügbar",
+    "upToDate": "Aktuell",
+    "downloadUpdate": "Update herunterladen",
+    "updateCheckingDisabled": "Update-Prüfung deaktiviert",
+    "installing": "Wird installiert...",
+    "preparing": "Wird vorbereitet...",
+    "checkForUpdates": "Nach Updates suchen",
+    "portableUpdateTitle": "Manuelles Update erforderlich",
+    "portableUpdateMessage": "Portable installs cannot be updated automatically. To update: download the latest NSIS installer from GitHub Releases, install it to the same folder, then copy your Data/ folder (settings, models, saved audio) from the old version to the new one.",
+    "portableUpdateButton": "GitHub Releases öffnen"
   },
   "common": {
     "loading": "Wird geladen...",
