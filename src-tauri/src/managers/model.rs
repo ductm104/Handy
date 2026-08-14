@@ -232,6 +232,98 @@ impl ModelManager {
             },
         );
 
+        // PhoWhisper (VinAI): Whisper fine-tuned on 844 hours of Vietnamese
+        // speech across all accents. Standard Whisper architecture and tokenizer,
+        // so the pre-converted GGML files work with the Whisper engine directly.
+        let phowhisper_languages: Vec<String> = vec!["vi".to_string()];
+
+        available_models.insert(
+            "phowhisper-small".to_string(),
+            ModelInfo {
+                id: "phowhisper-small".to_string(),
+                name: "PhoWhisper Small".to_string(),
+                description: "Vietnamese Whisper fine-tune. Fast and fairly accurate."
+                    .to_string(),
+                filename: "ggml-PhoWhisper-small.bin".to_string(),
+                url: Some(
+                    "https://huggingface.co/dongxiat/ggml-PhoWhisper-small/resolve/main/ggml-PhoWhisper-small.bin"
+                        .to_string(),
+                ),
+                sha256: None, // Not verified; the download size check still applies
+                size_mb: 488,
+                is_downloaded: false,
+                is_downloading: false,
+                partial_size: 0,
+                is_directory: false,
+                engine_type: EngineType::Whisper,
+                accuracy_score: 0.75,
+                speed_score: 0.85,
+                supports_translation: false,
+                is_recommended: false,
+                supported_languages: phowhisper_languages.clone(),
+                supports_language_selection: true,
+                is_custom: false,
+            },
+        );
+
+        available_models.insert(
+            "phowhisper-medium".to_string(),
+            ModelInfo {
+                id: "phowhisper-medium".to_string(),
+                name: "PhoWhisper Medium".to_string(),
+                description: "Vietnamese Whisper fine-tune. Good accuracy, medium speed."
+                    .to_string(),
+                filename: "ggml-PhoWhisper-medium.bin".to_string(),
+                url: Some(
+                    "https://huggingface.co/dongxiat/ggml-PhoWhisper-medium/resolve/main/ggml-PhoWhisper-medium.bin"
+                        .to_string(),
+                ),
+                sha256: None, // Not verified; the download size check still applies
+                size_mb: 1534,
+                is_downloaded: false,
+                is_downloading: false,
+                partial_size: 0,
+                is_directory: false,
+                engine_type: EngineType::Whisper,
+                accuracy_score: 0.88,
+                speed_score: 0.60,
+                supports_translation: false,
+                is_recommended: false,
+                supported_languages: phowhisper_languages.clone(),
+                supports_language_selection: true,
+                is_custom: false,
+            },
+        );
+
+        available_models.insert(
+            "phowhisper-large".to_string(),
+            ModelInfo {
+                id: "phowhisper-large".to_string(),
+                name: "PhoWhisper Large".to_string(),
+                description: "Vietnamese Whisper fine-tune. Best accuracy, but slow."
+                    .to_string(),
+                filename: "ggml-phowhisper-large.bin".to_string(),
+                url: Some(
+                    "https://huggingface.co/Briansss/ggml-PhoWhisper-large/resolve/main/ggml-phowhisper-large.bin"
+                        .to_string(),
+                ),
+                sha256: None, // Not verified; the download size check still applies
+                size_mb: 3095,
+                is_downloaded: false,
+                is_downloading: false,
+                partial_size: 0,
+                is_directory: false,
+                engine_type: EngineType::Whisper,
+                accuracy_score: 0.92,
+                speed_score: 0.30,
+                supports_translation: false,
+                is_recommended: false,
+                supported_languages: phowhisper_languages,
+                supports_language_selection: true,
+                is_custom: false,
+            },
+        );
+
         available_models.insert(
             "breeze-asr".to_string(),
             ModelInfo {

@@ -92,6 +92,18 @@
       "cohere-int8": {
         "name": "Cohere",
         "description": "Velký, pomalejší, ale velmi přesný vícejazyčný model."
+      },
+      "phowhisper-small": {
+        "name": "PhoWhisper Small",
+        "description": "Vietnamese Whisper fine-tune. Fast and fairly accurate."
+      },
+      "phowhisper-medium": {
+        "name": "PhoWhisper Medium",
+        "description": "Vietnamese Whisper fine-tune. Good accuracy, medium speed."
+      },
+      "phowhisper-large": {
+        "name": "PhoWhisper Large",
+        "description": "Vietnamese Whisper fine-tune. Best accuracy, but slow."
       }
     },
     "errors": {
