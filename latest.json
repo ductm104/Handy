@@ -1,11 +1,11 @@
 {
-  "version": "0.0.84",
-  "notes": "HanhCute v0.0.84",
-  "pub_date": "2026-06-22T09:25:49Z",
+  "version": "0.0.85",
+  "notes": "HanhCute v0.0.85",
+  "pub_date": "2026-08-14T04:53:17Z",
   "platforms": {
     "darwin-aarch64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVWJpWU5sZytGMHdZbjk3SlJHeGF6elIwZ21CR0JCZkN0MTdZbFB3UDRndDR5TXRQdVN5RnV5UVM4NUtQeHVnT0JQaDgySkRaeHFnMzFZb1pDNWNaRjZCWXY1Szlmc3dnPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzgyMTEwNjU0CWZpbGU6SGFuaEN1dGUuYXBwLnRhci5negpheGFWZ29lU1huYUhLc2dGUVk1a1lpTlVEOXJVcnRhTnR3bkJMMUJKTXJ2VlU4bTdTcmpTbnl0aU1WMEVsdVlmVDBzeHNqT1lka0tBZVl6UENyalZCZz09Cg==",
-      "url": "https://github.com/ductm104/Handy/releases/download/v0.0.84/HanhCute.app.tar.gz"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVSVWJpWU5sZytGMDhXc05ueUVvS2h3YSs5aXdWeVdKcjhwU1dYVWdkT3dzc085c2tLamVaUFJXRGRNbjNDbzhYbXZrem1GTWQzT0M1c1EwdVlGUHgxTFl2bTYzMDNCdEFJPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg2NjgzMDYzCWZpbGU6SGFuaEN1dGUuYXBwLnRhci5negp2d1BtY3RlVXBKVmJjZUczU2k4UHcwNjRBYlhZeFY1LzVCSTFTNFp5ZWZ6TGhsVWV2ZW9VbmFxb1ptclVUK29DZHkzbklFcEh0WVVoY09nZTc5WTdCZz09Cg==",
+      "url": "https://github.com/ductm104/Handy/releases/download/v0.0.85/HanhCute.app.tar.gz"
     }
   }
 }
