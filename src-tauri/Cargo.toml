@@ -53,6 +53,7 @@ rubato = "0.16.2"
 hound = "3.5.1"
 symphonia = { version = "0.5.5", default-features = false, features = [
   "aac",
+  "alac",
   "flac",
   "isomp4",
   "mp3",

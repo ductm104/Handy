@@ -19,6 +19,7 @@ const MEDIA_EXTENSIONS = [
   "flac",
   "ogg",
   "oga",
+  "mov",
 ];
 
 const getFileName = (path: string) => path.split(/[\\/]/).pop() || path;
