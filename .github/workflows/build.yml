@@ -273,8 +273,9 @@ jobs:
           fi
           echo "platform=${patched_platform}" >> $GITHUB_OUTPUT
 
-      # whisper-rs-sys cmake builds create paths that exceed Windows MAX_PATH
-      # (260 chars). Shorten the target dir to keep paths under the limit.
+      # Native cmake builds (previously whisper-rs-sys, now transcribe-cpp-sys)
+      # create paths that exceed Windows MAX_PATH (260 chars). Shorten the
+      # target dir to keep paths under the limit.
       - name: Shorten build path (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
@@ -353,15 +354,17 @@ jobs:
           AZURE_TENANT_ID: ${{ inputs.sign-binaries && secrets.AZURE_TENANT_ID || '' }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ inputs.sign-binaries && secrets.TAURI_SIGNING_PRIVATE_KEY || '' }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ inputs.sign-binaries && secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD || '' }}
-          # Disable -march=native and all SIMD instruction sets above SSE4.2 for
-          # x86_64 builds. Without this, CPUs lacking AVX/FMA (e.g. Celeron N2920,
-          # FX-8350) crash with SIGILL. The Vulkan backend handles heavy compute
-          # so disabling these has negligible performance impact.
-          GGML_NATIVE: ${{ !contains(inputs.platform, 'macos') && !contains(inputs.platform, 'arm') && !contains(inputs.target, 'aarch64') && 'OFF' || '' }}
-          GGML_AVX: ${{ !contains(inputs.platform, 'macos') && !contains(inputs.platform, 'arm') && !contains(inputs.target, 'aarch64') && 'OFF' || '' }}
-          GGML_AVX2: ${{ !contains(inputs.platform, 'macos') && !contains(inputs.platform, 'arm') && !contains(inputs.target, 'aarch64') && 'OFF' || '' }}
-          GGML_FMA: ${{ !contains(inputs.platform, 'macos') && !contains(inputs.platform, 'arm') && !contains(inputs.target, 'aarch64') && 'OFF' || '' }}
-          GGML_F16C: ${{ !contains(inputs.platform, 'macos') && !contains(inputs.platform, 'arm') && !contains(inputs.target, 'aarch64') && 'OFF' || '' }}
+          # Disable -march=native and SIMD above SSE4.2 for x86_64 builds.
+          # Without this, CPUs lacking AVX/FMA (e.g. Celeron N2920, FX-8350)
+          # crash with SIGILL. GGML_NATIVE=OFF alone is NOT enough: ggml's
+          # CMake defaults AVX/AVX2/FMA/F16C to ON whenever the build host
+          # has a native default (INS_ENB logic in ggml/CMakeLists.txt), so
+          # they must be disabled explicitly. The Vulkan backend handles
+          # heavy compute so disabling these has negligible performance
+          # impact. (The old GGML_* env vars only affected the removed
+          # whisper-rs build; the transcribe-cpp native build reads
+          # TRANSCRIBE_CMAKE_ARGS instead.)
+          TRANSCRIBE_CMAKE_ARGS: ${{ !contains(inputs.platform, 'macos') && !contains(inputs.platform, 'arm') && !contains(inputs.target, 'aarch64') && '-DGGML_NATIVE=OFF -DGGML_AVX=OFF -DGGML_AVX2=OFF -DGGML_FMA=OFF -DGGML_F16C=OFF' || '' }}
         with:
           tagName: ${{ inputs.release-id && format('v{0}', steps.get-version.outputs.version) || '' }}
           releaseName: ${{ inputs.release-id && format('v{0}', steps.get-version.outputs.version) || '' }}

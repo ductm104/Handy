@@ -120,6 +120,14 @@ pub async fn transcribe_file(
         .filter(|p| p.exists());
 
     const DECODE_CHUNK_SIZE: usize = 16_000 * 10; // 10 seconds of 16 kHz audio
+    /// Flush an in-progress speech run after this much audio even if VAD still
+    /// reports speech. Continuous speech (audiobooks, TTS) would otherwise
+    /// become a single giant chunk: one long batch run with no progressive
+    /// text and a progress bar that stalls, then jumps. 30s matches whisper's
+    /// native windowing and the pipeline's existing per-chunk context reset,
+    /// so quality is on par with VAD-driven chunking (a word at the cut point
+    /// may clip, same as any chunk boundary).
+    const MAX_CHUNK_SAMPLES: usize = 16_000 * 30; // 30 seconds of 16 kHz audio
 
     let tm = Arc::clone(&transcription_manager);
     let progress_app = app.clone();
@@ -267,7 +275,9 @@ pub async fn transcribe_file(
                 current_chunk.extend_from_slice(&speech);
 
                 let in_speech = vad.as_ref().map(|v| v.is_in_speech()).unwrap_or(true);
-                if prev_in_speech && !in_speech && !current_chunk.is_empty() {
+                if !current_chunk.is_empty()
+                    && ((prev_in_speech && !in_speech) || current_chunk.len() >= MAX_CHUNK_SAMPLES)
+                {
                     let callback = make_callback(
                         Arc::clone(&accumulated_text),
                         current_chunk_start_decoded,
@@ -284,7 +294,16 @@ pub async fn transcribe_file(
                             base_offset,
                             timestamp_mode,
                         )
-                        .map_err(|e| format!("Transcription failed: {}", e))?;
+                        .map_err(|e| {
+                            // A stop request that lands mid-chunk aborts the
+                            // in-flight run; report it as a cancellation so
+                            // the UI takes the cancelled path, not an error.
+                            if tm.is_file_transcription_cancelled() {
+                                "Cancelled".to_string()
+                            } else {
+                                format!("Transcription failed: {}", e)
+                            }
+                        })?;
                     if !text.is_empty() {
                         {
                             let mut acc = accumulated_text.lock().unwrap();
@@ -296,6 +315,10 @@ pub async fn transcribe_file(
                         chunk_texts.push(text);
                     }
                     current_chunk.clear();
+                    // Restart the chunk window at the current decode position
+                    // so the next piece (or the trailing flush below) maps to
+                    // a sane base offset for timestamps and progress.
+                    current_chunk_start_decoded = decoded_samples;
                 }
                 prev_in_speech = in_speech;
             }
@@ -332,7 +355,13 @@ pub async fn transcribe_file(
                         base_offset,
                         timestamp_mode,
                     )
-                    .map_err(|e| format!("Transcription failed: {}", e))?;
+                    .map_err(|e| {
+                        if tm.is_file_transcription_cancelled() {
+                            "Cancelled".to_string()
+                        } else {
+                            format!("Transcription failed: {}", e)
+                        }
+                    })?;
                 if !text.is_empty() {
                     {
                         let mut acc = accumulated_text.lock().unwrap();

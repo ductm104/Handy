@@ -9,16 +9,18 @@ use anyhow::Result;
 use log::{debug, error, info, warn};
 use serde::Serialize;
 use specta::Type;
-use std::ffi::{c_int, c_void, CStr};
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::path::Path;
-use std::sync::atomic::{AtomicBool, AtomicI32, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Condvar, Mutex, MutexGuard, OnceLock};
 use std::thread;
 use std::time::{Duration, SystemTime};
 use tauri::{AppHandle, Emitter, Manager};
+use transcribe_cpp::{
+    Backend, CancelToken, Device, DeviceType, Model, ModelOptions, RunExtension, RunOptions,
+    Session, Task, TimestampKind as CppTimestampKind, WhisperRunOptions,
+};
 use transcribe_rs::{
-    accel::{get_whisper_accelerator, get_whisper_gpu_device, GPU_DEVICE_AUTO},
     onnx::{
         canary::CanaryModel,
         cohere::CohereModel,
@@ -28,11 +30,7 @@ use transcribe_rs::{
         sense_voice::{SenseVoiceModel, SenseVoiceParams},
         Quantization,
     },
-    whisper_cpp::{gpu::auto_select_gpu_device, WhisperInferenceParams},
     SpeechModel, TranscribeOptions, TranscriptionResult, TranscriptionSegment,
-};
-use whisper_rs::{
-    whisper_rs_sys, FullParams, SamplingStrategy, WhisperContext, WhisperContextParameters,
 };
 
 #[derive(Clone, Debug, Serialize)]
@@ -143,94 +141,89 @@ fn group_segments_with_timestamps(
         .join("\n")
 }
 
-struct WhisperEngine {
-    state: whisper_rs::WhisperState,
-    #[allow(dead_code)]
-    context: WhisperContext,
+/// Whisper-family inference via transcribe-cpp.
+///
+/// This replaced the old whisper-rs engine. transcribe-cpp loads both GGUF
+/// models and legacy whisper.cpp `.bin` files (e.g. the PhoWhisper GGML
+/// downloads), so no model conversion was needed for the migration.
+///
+/// `Session` keeps its `Model` alive internally, so one loaded engine serves
+/// repeated dictation and file-chunk runs without reloading. Segment times
+/// come back in milliseconds and are mapped here to the
+/// `transcribe_rs::TranscriptionResult` (seconds) shape the rest of the
+/// pipeline — timestamp modes, file transcription, custom words — expects.
+struct TranscribeCppEngine {
+    session: Session,
+    cancel_token: CancelToken,
+    /// GGUF `general.architecture` (`"whisper"` for the whisper family,
+    /// including legacy `.bin` files). An empty arch is treated as whisper
+    /// too, since only whisper-family models are ever routed to this engine.
+    arch: String,
 }
 
-struct WhisperCallbackState {
-    callback: TranscriptionProgressCallback,
-    partial_text: Mutex<String>,
-    last_progress: AtomicI32,
-}
+/// Run once per process: route native transcribe-cpp logs into the `log`
+/// facade and register compute backends (a no-op for static builds such as
+/// macOS/metal, required before device enumeration on dynamic builds).
+static TRANSCRIBE_BACKEND_INIT: OnceLock<()> = OnceLock::new();
 
-struct WhisperCallbackGuard(*mut WhisperCallbackState);
-
-impl Drop for WhisperCallbackGuard {
-    fn drop(&mut self) {
-        if !self.0.is_null() {
-            unsafe {
-                drop(Box::from_raw(self.0));
-            }
+fn ensure_transcribe_backends() {
+    TRANSCRIBE_BACKEND_INIT.get_or_init(|| {
+        transcribe_cpp::init_logging();
+        if let Err(e) = transcribe_cpp::init_backends_default() {
+            warn!("transcribe-cpp backend init failed: {}", e);
         }
-    }
-}
-
-unsafe extern "C" fn whisper_progress_callback(
-    _: *mut whisper_rs_sys::whisper_context,
-    _: *mut whisper_rs_sys::whisper_state,
-    progress: c_int,
-    user_data: *mut c_void,
-) {
-    if user_data.is_null() {
-        return;
-    }
-
-    let state = &*(user_data as *const WhisperCallbackState);
-    let previous = state.last_progress.load(Ordering::Relaxed);
-
-    if progress < 100 && progress.saturating_sub(previous) < 2 {
-        return;
-    }
-
-    state.last_progress.store(progress, Ordering::Relaxed);
-    (state.callback)(TranscriptionProgress {
-        text: None,
-        progress: Some(progress),
     });
 }
 
-unsafe extern "C" fn whisper_segment_callback(
-    _: *mut whisper_rs_sys::whisper_context,
-    state: *mut whisper_rs_sys::whisper_state,
-    n_new: c_int,
-    user_data: *mut c_void,
-) {
-    if user_data.is_null() || state.is_null() || n_new <= 0 {
-        return;
+/// Map the persisted `WhisperAcceleratorSetting` (+ optional exact GPU index)
+/// to a transcribe-cpp backend request.
+///
+/// `Auto` and `Gpu` both prefer GPU when one is available; `Cpu` forces CPU.
+/// An explicit `gpu_device` index (>= 0) pins that exact registered device,
+/// otherwise the backend auto-selects. transcribe-cpp has no process-global
+/// accelerator switch, so this is resolved at each model load.
+fn resolve_transcribe_backend(
+    accelerator: WhisperAcceleratorSetting,
+    gpu_device: i32,
+) -> (Backend, Option<Device>) {
+    if accelerator == WhisperAcceleratorSetting::Cpu {
+        return (Backend::Cpu, None);
     }
-
-    let callback_state = &*(user_data as *const WhisperCallbackState);
-    let n_segments = whisper_rs_sys::whisper_full_n_segments_from_state(state);
-    let first_new = n_segments.saturating_sub(n_new);
-
-    let Ok(mut partial_text) = callback_state.partial_text.lock() else {
-        return;
-    };
-
-    for i in first_new..n_segments {
-        let text_ptr = whisper_rs_sys::whisper_full_get_segment_text_from_state(state, i);
-        if text_ptr.is_null() {
-            continue;
+    if gpu_device >= 0 {
+        let wanted = gpu_device as usize;
+        if let Some(device) = transcribe_cpp::devices()
+            .into_iter()
+            .find(|d| d.index == Some(wanted))
+        {
+            info!(
+                "Using user-selected compute device {} ({})",
+                gpu_device,
+                describe_transcribe_device(&device)
+            );
+            return (Backend::Auto, Some(device));
         }
-
-        let segment_text = CStr::from_ptr(text_ptr).to_string_lossy();
-        partial_text.push_str(&segment_text);
+        warn!(
+            "GPU device index {} not found, falling back to automatic selection",
+            gpu_device
+        );
     }
-
-    let text = partial_text.trim().to_string();
-    let progress = callback_state.last_progress.load(Ordering::Relaxed);
-    drop(partial_text);
-
-    (callback_state.callback)(TranscriptionProgress {
-        text: Some(text),
-        progress: (progress >= 0).then_some(progress),
-    });
+    (Backend::Auto, None)
 }
 
-impl WhisperEngine {
-    fn load(model_path: &Path) -> Result<Self> {
+fn describe_transcribe_device(device: &Device) -> String {
+    if device.description.is_empty() {
+        device.name.clone()
+    } else {
+        device.description.clone()
+    }
+}
+
+impl TranscribeCppEngine {
+    fn load(
+        model_path: &Path,
+        accelerator: WhisperAcceleratorSetting,
+        gpu_device: i32,
+    ) -> Result<Self> {
         if !model_path.exists() {
             return Err(anyhow::anyhow!(
                 "Whisper model not found: {}",
@@ -238,148 +231,183 @@ impl WhisperEngine {
             ));
         }
 
-        let use_gpu = get_whisper_accelerator().use_gpu();
-        let requested_gpu_device = get_whisper_gpu_device();
-        let gpu_device = if !use_gpu {
-            0
-        } else if requested_gpu_device == GPU_DEVICE_AUTO {
-            auto_select_gpu_device()
+        ensure_transcribe_backends();
+
+        let (backend, device) = resolve_transcribe_backend(accelerator, gpu_device);
+        let model = Model::load_with(model_path, &ModelOptions { backend, device })
+            .map_err(|e| anyhow::anyhow!("Failed to initialize Whisper context: {}", e))?;
+        let bound_backend = model.backend();
+        let bound_device = model
+            .device()
+            .map(|d| describe_transcribe_device(&d))
+            .unwrap_or_else(|_| "unknown".to_string());
+        let arch = model.arch();
+        info!(
+            "Loaded whisper model (backend '{}', device '{}', arch '{}')",
+            bound_backend, bound_device, arch
+        );
+
+        let mut session = model
+            .session()
+            .map_err(|e| anyhow::anyhow!("Failed to initialize Whisper state: {}", e))?;
+        let cancel_token = CancelToken::new();
+        session.set_cancel_token(&cancel_token);
+
+        Ok(Self {
+            session,
+            cancel_token,
+            arch,
+        })
+    }
+
+    /// Whether this model accepts the whisper run extension (decode prompt +
+    /// context knobs). Always true for the whisper family, including legacy
+    /// `.bin` files; anything else falls back to the fuzzy post-correction
+    /// path for custom words.
+    fn takes_initial_prompt(&self) -> bool {
+        self.arch.as_str() == "whisper" || self.arch.is_empty()
+    }
+
+    fn was_aborted(&self) -> bool {
+        self.session.was_aborted()
+    }
+
+    fn transcribe(
+        &mut self,
+        samples: &[f32],
+        language: Option<String>,
+        translate: bool,
+        initial_prompt: Option<String>,
+        no_context: bool,
+        progress_callback: Option<TranscriptionProgressCallback>,
+    ) -> Result<TranscriptionResult> {
+        if let Some(ref callback) = progress_callback {
+            callback(TranscriptionProgress {
+                text: None,
+                progress: Some(0),
+            });
+        }
+
+        // Mirror the old whisper `translate` flag: any non-English source with
+        // translation requested becomes an English-translation run.
+        let (task, target_language) = if translate && language.as_deref() != Some("en") {
+            (Task::Translate, Some("en".to_string()))
         } else {
-            info!("Using user-selected GPU device {}", requested_gpu_device);
-            requested_gpu_device
+            (Task::Transcribe, None)
         };
 
-        let mut context_params = WhisperContextParameters::default();
-        context_params.use_gpu = use_gpu;
-        context_params.flash_attn = true;
-        context_params.gpu_device = gpu_device;
-
-        let context = WhisperContext::new_with_params(model_path, context_params)
-            .map_err(|e| anyhow::anyhow!("Failed to initialize Whisper context: {}", e))?;
-        let state = context
-            .create_state()
-            .map_err(|e| anyhow::anyhow!("Failed to initialize Whisper state: {}", e))?;
-
-        Ok(Self { state, context })
-    }
-
-    fn transcribe_with(
-        &mut self,
-        samples: &[f32],
-        params: &WhisperInferenceParams,
-        no_context: bool,
-    ) -> Result<TranscriptionResult> {
-        self.infer(samples, params, None, no_context)
-    }
-
-    fn transcribe_with_progress(
-        &mut self,
-        samples: &[f32],
-        params: &WhisperInferenceParams,
-        progress_callback: Option<TranscriptionProgressCallback>,
-        no_context: bool,
-    ) -> Result<TranscriptionResult> {
-        self.infer(samples, params, progress_callback, no_context)
-    }
-
-    fn infer(
-        &mut self,
-        samples: &[f32],
-        params: &WhisperInferenceParams,
-        progress_callback: Option<TranscriptionProgressCallback>,
-        no_context: bool,
-    ) -> Result<TranscriptionResult> {
-        let mut full_params = FullParams::new(SamplingStrategy::BeamSearch {
-            beam_size: 3,
-            patience: -1.0,
-        });
-        full_params.set_language(params.language.as_deref());
-        full_params.set_translate(params.translate);
-        full_params.set_print_special(params.print_special);
-        full_params.set_print_progress(params.print_progress);
-        full_params.set_print_realtime(params.print_realtime);
-        full_params.set_print_timestamps(params.print_timestamps);
-        full_params.set_suppress_blank(params.suppress_blank);
-        full_params.set_suppress_nst(params.suppress_non_speech_tokens);
-        full_params.set_no_speech_thold(params.no_speech_thold);
-        full_params.set_no_context(no_context);
-        // Shorten the rolling text-context fed back between consecutive 30-second
-        // windows within a single call. The whisper.cpp default (16384) is effectively
-        // unbounded and lets a hallucination from one window propagate to the next.
-        // 64 tokens (~1 sentence) keeps windows largely independent while preserving
-        // minimal continuity. initial_prompt (custom words) is unaffected — it is
-        // injected via prompt_init, not the history budget.
-        full_params.set_n_max_text_ctx(64);
-        if params.n_threads > 0 {
-            full_params.set_n_threads(params.n_threads);
-        }
-
-        if let Some(ref prompt) = params.initial_prompt {
-            full_params.set_initial_prompt(prompt);
-        }
-
-        let _callback_guard = if let Some(callback) = progress_callback {
-            let callback_state = Box::new(WhisperCallbackState {
-                callback,
-                partial_text: Mutex::new(String::new()),
-                last_progress: AtomicI32::new(-1),
-            });
-            let callback_state = Box::into_raw(callback_state);
-
-            unsafe {
-                full_params.set_progress_callback(Some(whisper_progress_callback));
-                full_params.set_progress_callback_user_data(callback_state as *mut c_void);
-                full_params.set_new_segment_callback(Some(whisper_segment_callback));
-                full_params.set_new_segment_callback_user_data(callback_state as *mut c_void);
-            }
-
-            Some(WhisperCallbackGuard(callback_state))
+        // The whisper run extension carries both the custom-words decode
+        // prompt and the anti-hallucination context budget (previously
+        // `set_no_context(true)` + `set_n_max_text_ctx(64)` on whisper-rs):
+        // never condition on previous-window tokens and cap the rolling
+        // context at ~1 sentence so one window's hallucination cannot
+        // propagate into the next.
+        let family = if self.takes_initial_prompt() {
+            Some(RunExtension::Whisper(WhisperRunOptions {
+                initial_prompt,
+                condition_on_prev_tokens: Some(!no_context),
+                max_prev_context_tokens: Some(64),
+                ..Default::default()
+            }))
         } else {
             None
         };
 
-        self.state
-            .full(full_params, samples)
-            .map_err(|e| anyhow::anyhow!("Whisper inference failed: {}", e))?;
+        let run_options = RunOptions {
+            task,
+            language,
+            target_language,
+            timestamps: CppTimestampKind::Segment,
+            family,
+            ..Default::default()
+        };
 
-        let num_segments = self.state.full_n_segments();
-        let mut segments = Vec::new();
-        let mut full_text = String::new();
-
-        for i in 0..num_segments {
-            let segment = self
-                .state
-                .get_segment(i)
-                .ok_or_else(|| anyhow::anyhow!("Whisper segment {} out of bounds", i))?;
-            let text = segment
-                .to_str()
-                .map_err(|e| anyhow::anyhow!("Invalid Whisper segment text: {}", e))?;
-            let start = segment.start_timestamp() as f32 / 100.0;
-            let end = segment.end_timestamp() as f32 / 100.0;
-
-            let trimmed = text.trim();
-            if !trimmed.is_empty() {
-                segments.push(TranscriptionSegment {
-                    start,
-                    end,
-                    text: trimmed.to_string(),
-                });
-                if !full_text.is_empty() {
-                    full_text.push('\n');
+        // transcribe-cpp runs expose no in-flight progress signal (unlike the
+        // old whisper-rs callbacks), so interpolate one from wall-clock time
+        // while the synchronous run below blocks. Without this, file
+        // transcription progress would jump backwards to the chunk start and
+        // then forwards to the chunk end on every chunk. The estimate assumes
+        // a conservative 3x realtime factor, is capped at 95% so completion
+        // to 100% is always visible, and is strictly monotonic within a run.
+        let ticker_done = Arc::new(AtomicBool::new(false));
+        let ticker_handle = progress_callback.clone().map(|callback| {
+            let done = Arc::clone(&ticker_done);
+            let est_secs = (samples.len() as f64
+                / crate::audio_toolkit::constants::WHISPER_SAMPLE_RATE as f64
+                / 3.0)
+                .max(0.5);
+            let started = std::time::Instant::now();
+            std::thread::spawn(move || {
+                let mut last_pct = -1;
+                while !done.load(Ordering::Relaxed) {
+                    std::thread::sleep(Duration::from_millis(100));
+                    if done.load(Ordering::Relaxed) {
+                        break;
+                    }
+                    let pct = (started.elapsed().as_secs_f64() / est_secs * 100.0).min(95.0) as i32;
+                    let pct = pct.max(0);
+                    // Skip duplicate values at the 95% cap instead of
+                    // sleeping extra: keeps join latency at ~100ms.
+                    if pct != last_pct {
+                        last_pct = pct;
+                        callback(TranscriptionProgress {
+                            text: None,
+                            progress: Some(pct),
+                        });
+                    }
                 }
-                full_text.push_str(trimmed);
+            })
+        });
+
+        let result = self.session.run(samples, &run_options);
+        ticker_done.store(true, Ordering::Relaxed);
+        if let Some(handle) = ticker_handle {
+            let _ = handle.join();
+        }
+        // A cancelled run must not poison the next one: the flag is
+        // edge-triggered per run, so always clear it once the run ends.
+        self.cancel_token.reset();
+
+        let transcript = result.map_err(|e| anyhow::anyhow!("Whisper inference failed: {}", e))?;
+
+        if let Some(ref callback) = progress_callback {
+            callback(TranscriptionProgress {
+                text: None,
+                progress: Some(100),
+            });
+        }
+
+        let mut segments = Vec::with_capacity(transcript.segments.len());
+        let mut full_text = String::new();
+        for s in &transcript.segments {
+            let trimmed = s.text.trim();
+            if trimmed.is_empty() {
+                continue;
             }
+            segments.push(TranscriptionSegment {
+                start: s.t0_ms as f32 / 1000.0,
+                end: s.t1_ms as f32 / 1000.0,
+                text: trimmed.to_string(),
+            });
+            if !full_text.is_empty() {
+                full_text.push('\n');
+            }
+            full_text.push_str(trimmed);
         }
 
         Ok(TranscriptionResult {
-            text: full_text.trim().to_string(),
+            text: if segments.is_empty() {
+                transcript.text.trim().to_string()
+            } else {
+                full_text
+            },
             segments: Some(segments),
         })
     }
 }
 
 enum LoadedEngine {
-    Whisper(WhisperEngine),
+    Whisper(TranscribeCppEngine),
     Parakeet(ParakeetModel),
     Moonshine(MoonshineModel),
     MoonshineStreaming(StreamingModel),
@@ -416,6 +444,10 @@ pub struct TranscriptionManager {
     is_loading: Arc<Mutex<bool>>,
     loading_condvar: Arc<Condvar>,
     file_transcription_cancelled: Arc<AtomicBool>,
+    /// Clone of the cancel token installed on the loaded whisper session.
+    /// Kept outside the engine mutex so `cancel_file_transcription` can abort
+    /// a mid-chunk run while the engine is checked out for transcription.
+    transcribe_cancel_token: Arc<Mutex<Option<CancelToken>>>,
 }
 
 impl TranscriptionManager {
@@ -431,6 +463,7 @@ impl TranscriptionManager {
             is_loading: Arc::new(Mutex::new(false)),
             loading_condvar: Arc::new(Condvar::new()),
             file_transcription_cancelled: Arc::new(AtomicBool::new(false)),
+            transcribe_cancel_token: Arc::new(Mutex::new(None)),
         };
 
         // Start the idle watcher
@@ -545,6 +578,9 @@ impl TranscriptionManager {
             // Dropping the engine frees all resources
             *engine = None;
         }
+        // The installed cancel token dies with the session; drop our clone too
+        // so a later load starts from a fresh, un-cancelled token.
+        *self.transcribe_cancel_token.lock().unwrap() = None;
         {
             let mut current_model = self.current_model_id.lock().unwrap();
             *current_model = None;
@@ -645,11 +681,18 @@ impl TranscriptionManager {
 
         let loaded_engine = match model_info.engine_type {
             EngineType::Whisper => {
-                let engine = WhisperEngine::load(&model_path).map_err(|e| {
+                let settings = get_settings(&self.app_handle);
+                let engine = TranscribeCppEngine::load(
+                    &model_path,
+                    settings.whisper_accelerator,
+                    settings.whisper_gpu_device,
+                )
+                .map_err(|e| {
                     let error_msg = format!("Failed to load whisper model {}: {}", model_id, e);
                     emit_loading_failed(&error_msg);
                     anyhow::anyhow!(error_msg)
                 })?;
+                *self.transcribe_cancel_token.lock().unwrap() = Some(engine.cancel_token.clone());
                 LoadedEngine::Whisper(engine)
             }
             EngineType::Parakeet => {
@@ -784,6 +827,11 @@ impl TranscriptionManager {
     pub fn cancel_file_transcription(&self) {
         self.file_transcription_cancelled
             .store(true, Ordering::SeqCst);
+        // Abort a whisper run that is already in flight; the run returns
+        // `Error::Aborted` with its partial transcript.
+        if let Some(token) = self.transcribe_cancel_token.lock().unwrap().as_ref() {
+            token.cancel();
+        }
         info!("File transcription cancellation requested");
     }
 
@@ -794,6 +842,9 @@ impl TranscriptionManager {
     pub fn reset_file_transcription_cancelled(&self) {
         self.file_transcription_cancelled
             .store(false, Ordering::SeqCst);
+        if let Some(token) = self.transcribe_cancel_token.lock().unwrap().as_ref() {
+            token.reset();
+        }
     }
 
     pub fn transcribe(&self, audio: Vec<f32>) -> Result<String> {
@@ -972,6 +1023,7 @@ impl TranscriptionManager {
         // Perform transcription with the appropriate engine.
         // We use catch_unwind to prevent engine panics from poisoning the mutex,
         // which would make the app hang indefinitely on subsequent operations.
+        let whisper_took_prompt;
         let result = {
             let mut engine_guard = self.lock_engine();
 
@@ -988,6 +1040,12 @@ impl TranscriptionManager {
             };
 
             // Release the lock before transcribing — no mutex held during the engine call
+            // Capture whether the whisper run carries the decode prompt while
+            // the engine is already owned, so no second lock is needed later.
+            whisper_took_prompt = matches!(
+                &engine,
+                LoadedEngine::Whisper(w) if w.takes_initial_prompt()
+            );
             drop(engine_guard);
 
             let transcribe_result = catch_unwind(AssertUnwindSafe(
@@ -1007,34 +1065,34 @@ impl TranscriptionManager {
                                 Some(normalized)
                             };
 
-                            let params = WhisperInferenceParams {
-                                language: whisper_language,
-                                translate: settings.translate_to_english,
-                                initial_prompt: if settings.custom_words.is_empty() {
-                                    None
-                                } else {
-                                    Some(settings.custom_words.join(", "))
-                                },
-                                ..Default::default()
+                            let initial_prompt = if settings.custom_words.is_empty() {
+                                None
+                            } else {
+                                Some(settings.custom_words.join(", "))
                             };
 
-                            if let Some(callback) = progress_callback.clone() {
-                                whisper_engine
-                                    .transcribe_with_progress(
-                                        audio,
-                                        &params,
-                                        Some(callback),
-                                        no_context,
-                                    )
-                                    .map_err(|e| {
-                                        anyhow::anyhow!("Whisper transcription failed: {}", e)
-                                    })
-                            } else {
-                                whisper_engine
-                                    .transcribe_with(audio, &params, no_context)
-                                    .map_err(|e| {
-                                        anyhow::anyhow!("Whisper transcription failed: {}", e)
-                                    })
+                            match whisper_engine.transcribe(
+                                audio,
+                                whisper_language,
+                                settings.translate_to_english,
+                                initial_prompt,
+                                no_context,
+                                progress_callback.clone(),
+                            ) {
+                                Ok(result) => Ok(result),
+                                // A user-cancelled file run surfaces as the
+                                // plain "Cancelled" marker so the file
+                                // pipeline takes its cancelled path instead
+                                // of reporting a transcription error.
+                                Err(_)
+                                    if whisper_engine.was_aborted()
+                                        && self.is_file_transcription_cancelled() =>
+                                {
+                                    Err(anyhow::anyhow!("Cancelled"))
+                                }
+                                Err(e) => {
+                                    Err(anyhow::anyhow!("Whisper transcription failed: {}", e))
+                                }
                             }
                         }
                         LoadedEngine::Parakeet(parakeet_engine) => {
@@ -1239,14 +1297,17 @@ impl TranscriptionManager {
         };
 
         // Apply word correction if custom words are configured.
-        // Skip for Whisper models since custom words are already passed as initial_prompt.
-        let is_whisper = self
+        // Skip for Whisper models whose run actually carried the decode prompt
+        // (the extension is rejected on non-whisper architectures, in which
+        // case the fuzzy correction below still applies).
+        let custom_words_prompted = self
             .model_manager
             .get_model_info(&settings.selected_model)
             .map(|info| matches!(info.engine_type, EngineType::Whisper))
-            .unwrap_or(false);
+            .unwrap_or(false)
+            && whisper_took_prompt;
 
-        let corrected_result = if !settings.custom_words.is_empty() && !is_whisper {
+        let corrected_result = if !settings.custom_words.is_empty() && !custom_words_prompted {
             apply_custom_words(
                 &raw_text,
                 &settings.custom_words,
@@ -1291,24 +1352,24 @@ impl TranscriptionManager {
     }
 }
 
-/// Apply the user's accelerator preferences to the transcribe-rs global atomics.
+/// Apply the user's accelerator preferences.
 /// Called on startup and whenever the user changes the setting.
+///
+/// transcribe-cpp has no process-global accelerator switch: the whisper
+/// backend is chosen per model load from `whisper_accelerator` /
+/// `whisper_gpu_device` (see `TranscribeCppEngine::load`), so a change takes
+/// effect on the next load. This only ensures native logging + backend
+/// registration happened, then applies the ORT (ONNX) preference as before.
 pub fn apply_accelerator_settings(app: &tauri::AppHandle) {
     use transcribe_rs::accel;
 
     let settings = get_settings(app);
 
-    let whisper_pref = match settings.whisper_accelerator {
-        WhisperAcceleratorSetting::Auto => accel::WhisperAccelerator::Auto,
-        WhisperAcceleratorSetting::Cpu => accel::WhisperAccelerator::CpuOnly,
-        WhisperAcceleratorSetting::Gpu => accel::WhisperAccelerator::Gpu,
-    };
-    accel::set_whisper_accelerator(whisper_pref);
-    accel::set_whisper_gpu_device(settings.whisper_gpu_device);
+    ensure_transcribe_backends();
     info!(
-        "Whisper accelerator set to: {}, gpu_device: {}",
-        whisper_pref,
-        if settings.whisper_gpu_device == accel::GPU_DEVICE_AUTO {
+        "Whisper accelerator preference: {:?}, gpu_device: {} (applied on next model load)",
+        settings.whisper_accelerator,
+        if settings.whisper_gpu_device < 0 {
             "auto".to_string()
         } else {
             settings.whisper_gpu_device.to_string()
@@ -1336,25 +1397,26 @@ pub struct GpuDeviceOption {
 static GPU_DEVICES: OnceLock<Vec<GpuDeviceOption>> = OnceLock::new();
 
 fn cached_gpu_devices() -> &'static [GpuDeviceOption] {
-    use transcribe_rs::whisper_cpp::gpu::list_gpu_devices;
-
     GPU_DEVICES.get_or_init(|| {
         // ggml's Vulkan backend uses FMA3 instructions internally.
         // On older CPUs without FMA3 (e.g. Sandy Bridge Xeons) this causes
         // a SIGILL crash that cannot be caught. Skip enumeration entirely
-        // on those CPUs — GPU-accelerated whisper won't work there anyway.
+        // on those CPUs — GPU-accelerated inference won't work there anyway.
         #[cfg(target_arch = "x86_64")]
         if !std::arch::is_x86_feature_detected!("fma") {
             warn!("CPU lacks FMA3 support — skipping GPU device enumeration");
             return Vec::new();
         }
 
-        list_gpu_devices()
+        ensure_transcribe_backends();
+        transcribe_cpp::devices()
             .into_iter()
-            .map(|d| GpuDeviceOption {
-                id: d.id,
-                name: d.name,
-                total_vram_mb: d.total_vram / (1024 * 1024),
+            .enumerate()
+            .filter(|(_, d)| matches!(d.device_type, DeviceType::Gpu | DeviceType::Igpu))
+            .map(|(pos, d)| GpuDeviceOption {
+                id: d.index.unwrap_or(pos) as i32,
+                name: describe_transcribe_device(&d),
+                total_vram_mb: (d.memory_total / (1024 * 1024)) as usize,
             })
             .collect()
     })

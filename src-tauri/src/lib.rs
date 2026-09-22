@@ -270,6 +270,20 @@ fn show_main_window_command(app: AppHandle) -> Result<(), String> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run(cli_args: CliArgs) {
+    // Avoid ggml-metal residency-set teardown assertions when a native engine
+    // outlives the Tauri shutdown sequence (quit crash). This must happen
+    // before transcribe-cpp initializes its Metal device. Mirrors upstream
+    // Handy#1902; advanced users can restore upstream residency behavior with
+    // HANDY_METAL_RESIDENCY=1.
+    #[cfg(target_os = "macos")]
+    if std::env::var("HANDY_METAL_RESIDENCY").as_deref() == Ok("1") {
+        // ggml treats GGML_METAL_NO_RESIDENCY as presence-based, so remove an
+        // inherited value as well when explicitly opting back in.
+        std::env::remove_var("GGML_METAL_NO_RESIDENCY");
+    } else {
+        std::env::set_var("GGML_METAL_NO_RESIDENCY", "1");
+    }
+
     // Detect portable mode before anything else
     portable::init();
 
@@ -388,13 +402,18 @@ pub fn run(cli_args: CliArgs) {
         ])
         .events(collect_events![managers::history::HistoryUpdatePayload,]);
 
+    // NOTE: fail-soft on purpose. The export path is relative to the process
+    // working directory, which is `/` (read-only) for Finder/`open`/launchd
+    // launches. Crashing here would make debug builds unlaunchable outside a
+    // terminal. Bindings are generated at dev time anyway; a stale file is
+    // always better than a dead app.
     #[cfg(debug_assertions)] // <- Only export on non-release builds
-    specta_builder
-        .export(
-            Typescript::default().bigint(BigIntExportBehavior::Number),
-            "../src/bindings.ts",
-        )
-        .expect("Failed to export typescript bindings");
+    if let Err(e) = specta_builder.export(
+        Typescript::default().bigint(BigIntExportBehavior::Number),
+        "../src/bindings.ts",
+    ) {
+        eprintln!("WARNING: failed to export typescript bindings: {e}");
+    }
 
     let invoke_handler = specta_builder.invoke_handler();
 
@@ -503,8 +522,8 @@ pub fn run(cli_args: CliArgs) {
             initialize_core_logic(&app_handle);
 
             // Pre-warm GPU/accelerator enumeration on a background thread.
-            // The first call into transcribe_rs::whisper_cpp::gpu::list_gpu_devices
-            // loads the Metal/Vulkan backend and probes devices, which can take
+            // The first call into transcribe_cpp::devices() loads the
+            // Metal/Vulkan backend and probes devices, which can take
             // several seconds. Without this, that cost is paid synchronously the
             // first time the user opens the Advanced settings page (which calls
             // the get_available_accelerators command), causing a UI freeze.
