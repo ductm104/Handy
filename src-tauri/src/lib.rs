@@ -402,13 +402,18 @@ pub fn run(cli_args: CliArgs) {
         ])
         .events(collect_events![managers::history::HistoryUpdatePayload,]);
 
+    // NOTE: fail-soft on purpose. The export path is relative to the process
+    // working directory, which is `/` (read-only) for Finder/`open`/launchd
+    // launches. Crashing here would make debug builds unlaunchable outside a
+    // terminal. Bindings are generated at dev time anyway; a stale file is
+    // always better than a dead app.
     #[cfg(debug_assertions)] // <- Only export on non-release builds
-    specta_builder
-        .export(
-            Typescript::default().bigint(BigIntExportBehavior::Number),
-            "../src/bindings.ts",
-        )
-        .expect("Failed to export typescript bindings");
+    if let Err(e) = specta_builder.export(
+        Typescript::default().bigint(BigIntExportBehavior::Number),
+        "../src/bindings.ts",
+    ) {
+        eprintln!("WARNING: failed to export typescript bindings: {e}");
+    }
 
     let invoke_handler = specta_builder.invoke_handler();
 
