@@ -276,8 +276,7 @@ pub async fn transcribe_file(
 
                 let in_speech = vad.as_ref().map(|v| v.is_in_speech()).unwrap_or(true);
                 if !current_chunk.is_empty()
-                    && ((prev_in_speech && !in_speech)
-                        || current_chunk.len() >= MAX_CHUNK_SAMPLES)
+                    && ((prev_in_speech && !in_speech) || current_chunk.len() >= MAX_CHUNK_SAMPLES)
                 {
                     let callback = make_callback(
                         Arc::clone(&accumulated_text),

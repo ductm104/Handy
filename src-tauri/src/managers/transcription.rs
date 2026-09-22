@@ -234,9 +234,8 @@ impl TranscribeCppEngine {
         ensure_transcribe_backends();
 
         let (backend, device) = resolve_transcribe_backend(accelerator, gpu_device);
-        let model = Model::load_with(model_path, &ModelOptions { backend, device }).map_err(|e| {
-            anyhow::anyhow!("Failed to initialize Whisper context: {}", e)
-        })?;
+        let model = Model::load_with(model_path, &ModelOptions { backend, device })
+            .map_err(|e| anyhow::anyhow!("Failed to initialize Whisper context: {}", e))?;
         let bound_backend = model.backend();
         let bound_device = model
             .device()
@@ -291,12 +290,11 @@ impl TranscribeCppEngine {
 
         // Mirror the old whisper `translate` flag: any non-English source with
         // translation requested becomes an English-translation run.
-        let (task, target_language) =
-            if translate && language.as_deref() != Some("en") {
-                (Task::Translate, Some("en".to_string()))
-            } else {
-                (Task::Transcribe, None)
-            };
+        let (task, target_language) = if translate && language.as_deref() != Some("en") {
+            (Task::Translate, Some("en".to_string()))
+        } else {
+            (Task::Transcribe, None)
+        };
 
         // The whisper run extension carries both the custom-words decode
         // prompt and the anti-hallucination context budget (previously
@@ -694,8 +692,7 @@ impl TranscriptionManager {
                     emit_loading_failed(&error_msg);
                     anyhow::anyhow!(error_msg)
                 })?;
-                *self.transcribe_cancel_token.lock().unwrap() =
-                    Some(engine.cancel_token.clone());
+                *self.transcribe_cancel_token.lock().unwrap() = Some(engine.cancel_token.clone());
                 LoadedEngine::Whisper(engine)
             }
             EngineType::Parakeet => {
@@ -1093,10 +1090,9 @@ impl TranscriptionManager {
                                 {
                                     Err(anyhow::anyhow!("Cancelled"))
                                 }
-                                Err(e) => Err(anyhow::anyhow!(
-                                    "Whisper transcription failed: {}",
-                                    e
-                                )),
+                                Err(e) => {
+                                    Err(anyhow::anyhow!("Whisper transcription failed: {}", e))
+                                }
                             }
                         }
                         LoadedEngine::Parakeet(parakeet_engine) => {
@@ -1416,12 +1412,7 @@ fn cached_gpu_devices() -> &'static [GpuDeviceOption] {
         transcribe_cpp::devices()
             .into_iter()
             .enumerate()
-            .filter(|(_, d)| {
-                matches!(
-                    d.device_type,
-                    DeviceType::Gpu | DeviceType::Igpu
-                )
-            })
+            .filter(|(_, d)| matches!(d.device_type, DeviceType::Gpu | DeviceType::Igpu))
             .map(|(pos, d)| GpuDeviceOption {
                 id: d.index.unwrap_or(pos) as i32,
                 name: describe_transcribe_device(&d),
