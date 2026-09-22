@@ -284,7 +284,16 @@ pub async fn transcribe_file(
                             base_offset,
                             timestamp_mode,
                         )
-                        .map_err(|e| format!("Transcription failed: {}", e))?;
+                        .map_err(|e| {
+                            // A stop request that lands mid-chunk aborts the
+                            // in-flight run; report it as a cancellation so
+                            // the UI takes the cancelled path, not an error.
+                            if tm.is_file_transcription_cancelled() {
+                                "Cancelled".to_string()
+                            } else {
+                                format!("Transcription failed: {}", e)
+                            }
+                        })?;
                     if !text.is_empty() {
                         {
                             let mut acc = accumulated_text.lock().unwrap();
@@ -332,7 +341,13 @@ pub async fn transcribe_file(
                         base_offset,
                         timestamp_mode,
                     )
-                    .map_err(|e| format!("Transcription failed: {}", e))?;
+                    .map_err(|e| {
+                        if tm.is_file_transcription_cancelled() {
+                            "Cancelled".to_string()
+                        } else {
+                            format!("Transcription failed: {}", e)
+                        }
+                    })?;
                 if !text.is_empty() {
                     {
                         let mut acc = accumulated_text.lock().unwrap();

@@ -9,6 +9,11 @@ This guide covers how to set up the development environment and build HanhCute f
 - [Rust](https://rustup.rs/) (latest stable)
 - [Bun](https://bun.sh/) package manager
 - [Tauri Prerequisites](https://tauri.app/start/prerequisites/)
+- A C++ toolchain and [CMake](https://cmake.org/) — the speech engine
+  (`transcribe-cpp`) compiles its native ggml runtime from source on first
+  build. Covered by the Xcode CLT / VS Build Tools / `build-essential`
+  requirements below; Windows x64 and Linux also need the Vulkan SDK for the
+  GPU backend (same requirement as before).
 
 ### Platform-Specific Requirements
 

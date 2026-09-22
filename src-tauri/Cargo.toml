@@ -79,8 +79,8 @@ rusqlite = { version = "0.37", features = ["bundled"] }
 tar = "0.4.44"
 flate2 = "1.0"
 sha2 = "0.10"
-transcribe-rs = { version = "0.3.8", features = ["whisper-cpp", "onnx"] }
-whisper-rs = "0.16.0"
+transcribe-rs = { version = "0.3.8", features = ["onnx"] }
+transcribe-cpp = { version = "0.2.3", default-features = false }
 handy-keys = "0.2.4"
 ferrous-opencc = "0.2.3"
 clap = { version = "4", features = ["derive"] }
@@ -99,7 +99,7 @@ tauri-plugin-single-instance = "2.3.2"
 tauri-plugin-updater = "2.10.0"
 
 [target.'cfg(windows)'.dependencies]
-transcribe-rs = { version = "0.3.3", features = ["whisper-vulkan", "ort-directml"] }
+transcribe-rs = { version = "0.3.8", features = ["onnx", "ort-directml"] }
 windows = { version = "0.61.3", features = [
   "Win32_Media_Audio_Endpoints",
   "Win32_System_Com_StructuredStorage",
@@ -109,17 +109,26 @@ windows = { version = "0.61.3", features = [
 ] }
 winreg = "0.55"
 
+[target.'cfg(all(windows, target_arch = "x86_64"))'.dependencies]
+# Static Vulkan backend baked into the binary: no DLLs to ship, same
+# runtime GPU fallback posture as the old whisper-vulkan build.
+transcribe-cpp = { version = "0.2.3", default-features = false, features = ["vulkan"] }
+
+[target.'cfg(all(windows, target_arch = "aarch64"))'.dependencies]
+# Windows-on-ARM is CPU-only (Adreno Vulkan drivers are immature).
+transcribe-cpp = { version = "0.2.3", default-features = false }
+
 [target.'cfg(target_os = "macos")'.dependencies]
 tauri-nspanel = { git = "https://github.com/ahkohd/tauri-nspanel", branch = "v2.1" }
-transcribe-rs = { version = "0.3.3", features = ["whisper-metal"] }
+transcribe-cpp = { version = "0.2.3", default-features = false, features = ["metal"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 gtk-layer-shell = { version = "0.8", features = ["v0_6"] }
 gtk = "0.18"
-transcribe-rs = { version = "0.3.3", features = ["whisper-vulkan"] }
+# Static Vulkan backend: self-contained binary, no .so staging needed.
+transcribe-cpp = { version = "0.2.3", default-features = false, features = ["vulkan"] }
 
 [patch.crates-io]
-whisper-rs-sys = { path = "vendor/whisper-rs-sys" }
 tauri-runtime = { git = "https://github.com/cjpais/tauri.git", branch = "handy-2.10.2" }
 tauri-runtime-wry = { git = "https://github.com/cjpais/tauri.git", branch = "handy-2.10.2" }
 tauri-utils = { git = "https://github.com/cjpais/tauri.git", branch = "handy-2.10.2" }

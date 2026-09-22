@@ -3,6 +3,7 @@
 // Existing tests don't exercise transcription, so this is safe.
 
 use crate::managers::model::ModelManager;
+use crate::settings::TimestampMode;
 use anyhow::Result;
 use serde::Serialize;
 use specta::Type;
@@ -16,6 +17,14 @@ pub struct ModelStateEvent {
     pub model_name: Option<String>,
     pub error: Option<String>,
 }
+
+#[derive(Clone, Debug)]
+pub struct TranscriptionProgress {
+    pub text: Option<String>,
+    pub progress: Option<i32>,
+}
+
+pub type TranscriptionProgressCallback = Arc<dyn Fn(TranscriptionProgress) + Send + Sync>;
 
 /// RAII guard that is a no-op in the mock — mirrors the real `LoadingGuard`.
 pub struct LoadingGuard;
@@ -60,6 +69,34 @@ impl TranscriptionManager {
     pub fn transcribe(&self, _audio: Vec<f32>) -> Result<String> {
         Ok(String::new())
     }
+
+    pub fn transcribe_segments(
+        &self,
+        _audio: Vec<f32>,
+        _segments: Vec<(usize, usize)>,
+    ) -> Result<String> {
+        Ok(String::new())
+    }
+
+    pub fn transcribe_chunk_with_progress(
+        &self,
+        _audio: &[f32],
+        _progress_callback: Option<TranscriptionProgressCallback>,
+        _skip_immediate_unload: bool,
+        _no_context: bool,
+        _base_offset_seconds: f64,
+        _timestamp_mode: TimestampMode,
+    ) -> Result<String> {
+        Ok(String::new())
+    }
+
+    pub fn cancel_file_transcription(&self) {}
+
+    pub fn is_file_transcription_cancelled(&self) -> bool {
+        false
+    }
+
+    pub fn reset_file_transcription_cancelled(&self) {}
 }
 
 /// No-op in CI mock.

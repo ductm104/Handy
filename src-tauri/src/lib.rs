@@ -503,8 +503,8 @@ pub fn run(cli_args: CliArgs) {
             initialize_core_logic(&app_handle);
 
             // Pre-warm GPU/accelerator enumeration on a background thread.
-            // The first call into transcribe_rs::whisper_cpp::gpu::list_gpu_devices
-            // loads the Metal/Vulkan backend and probes devices, which can take
+            // The first call into transcribe_cpp::devices() loads the
+            // Metal/Vulkan backend and probes devices, which can take
             // several seconds. Without this, that cost is paid synchronously the
             // first time the user opens the Advanced settings page (which calls
             // the get_available_accelerators command), causing a UI freeze.
