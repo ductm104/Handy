@@ -20,8 +20,10 @@ bun run tauri dev
 # If cmake error on macOS:
 CMAKE_POLICY_VERSION_MINIMUM=3.5 bun run tauri dev
 
-# Build for production
-bun run tauri build
+# Build for production (ALWAYS use build.sh — it exports TAURI_SIGNING_PRIVATE_KEY for the updater .sig)
+./build.sh --dmg    # app + dmg + updater tar.gz + .sig (default rebuild)
+./build.sh --deploy # clean + install + app + dmg (for releases)
+# Do NOT run `bun run tauri build` directly — it fails with "no private key" and leaves a stale .sig
 
 # Frontend only development
 bun run dev        # Start Vite dev server
