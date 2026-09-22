@@ -324,7 +324,50 @@ impl TranscribeCppEngine {
             ..Default::default()
         };
 
+        // transcribe-cpp runs expose no in-flight progress signal (unlike the
+        // old whisper-rs callbacks), so interpolate one from wall-clock time
+        // while the synchronous run below blocks. Without this, file
+        // transcription progress would jump backwards to the chunk start and
+        // then forwards to the chunk end on every chunk. The estimate assumes
+        // a conservative 3x realtime factor, is capped at 95% so completion
+        // to 100% is always visible, and is strictly monotonic within a run.
+        let ticker_done = Arc::new(AtomicBool::new(false));
+        let ticker_handle = progress_callback.clone().map(|callback| {
+            let done = Arc::clone(&ticker_done);
+            let est_secs = (samples.len() as f64
+                / crate::audio_toolkit::constants::WHISPER_SAMPLE_RATE as f64
+                / 3.0)
+                .max(0.5);
+            let started = std::time::Instant::now();
+            std::thread::spawn(move || {
+                while !done.load(Ordering::Relaxed) {
+                    std::thread::sleep(Duration::from_millis(100));
+                    if done.load(Ordering::Relaxed) {
+                        break;
+                    }
+                    let pct =
+                        (started.elapsed().as_secs_f64() / est_secs * 100.0).min(95.0) as i32;
+                    callback(TranscriptionProgress {
+                        text: None,
+                        progress: Some(pct.max(0)),
+                    });
+                    if pct >= 95 {
+                        // Hold at the cap until the run finishes instead of
+                        // churning the UI with identical values.
+                        std::thread::sleep(Duration::from_millis(400));
+                    }
+                }
+            })
+        });
+
         let result = self.session.run(samples, &run_options);
+        ticker_done.store(true, Ordering::Relaxed);
+        if let Some(handle) = ticker_handle {
+            let _ = handle.join();
+        }
+        // A cancelled run must not poison the next one: the flag is
+        // edge-triggered per run, so always clear it once the run ends.
+        self.cancel_token.reset();
         // A cancelled run must not poison the next one: the flag is
         // edge-triggered per run, so always clear it once the run ends.
         self.cancel_token.reset();
