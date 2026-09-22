@@ -24,6 +24,9 @@ CMAKE_POLICY_VERSION_MINIMUM=3.5 bun run tauri dev
 ./build.sh --dmg    # app + dmg + updater tar.gz + .sig (default rebuild)
 ./build.sh --deploy # clean + install + app + dmg (for releases)
 # Do NOT run `bun run tauri build` directly — it fails with "no private key" and leaves a stale .sig
+# macOS 27 + Xcode 26.x: CLT SDK 27 is too new for the Xcode linker (tapi arm64e.x1 error).
+# Prefix SDKROOT to force the Xcode SDK; avoid --deploy (cargo clean) so whisper/transcribe sys crates stay cached:
+# SDKROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk ./build.sh --dmg
 
 # Frontend only development
 bun run dev        # Start Vite dev server
