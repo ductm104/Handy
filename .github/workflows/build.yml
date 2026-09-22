@@ -354,13 +354,17 @@ jobs:
           AZURE_TENANT_ID: ${{ inputs.sign-binaries && secrets.AZURE_TENANT_ID || '' }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ inputs.sign-binaries && secrets.TAURI_SIGNING_PRIVATE_KEY || '' }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ inputs.sign-binaries && secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD || '' }}
-          # Disable -march=native for x86_64 builds. Without this, CPUs lacking
-          # AVX/FMA (e.g. Celeron N2920, FX-8350) crash with SIGILL. The Vulkan
-          # backend handles heavy compute so disabling this has negligible
-          # performance impact. (The old GGML_* vars only affected the removed
+          # Disable -march=native and SIMD above SSE4.2 for x86_64 builds.
+          # Without this, CPUs lacking AVX/FMA (e.g. Celeron N2920, FX-8350)
+          # crash with SIGILL. GGML_NATIVE=OFF alone is NOT enough: ggml's
+          # CMake defaults AVX/AVX2/FMA/F16C to ON whenever the build host
+          # has a native default (INS_ENB logic in ggml/CMakeLists.txt), so
+          # they must be disabled explicitly. The Vulkan backend handles
+          # heavy compute so disabling these has negligible performance
+          # impact. (The old GGML_* env vars only affected the removed
           # whisper-rs build; the transcribe-cpp native build reads
           # TRANSCRIBE_CMAKE_ARGS instead.)
-          TRANSCRIBE_CMAKE_ARGS: ${{ !contains(inputs.platform, 'macos') && !contains(inputs.platform, 'arm') && !contains(inputs.target, 'aarch64') && '-DGGML_NATIVE=OFF' || '' }}
+          TRANSCRIBE_CMAKE_ARGS: ${{ !contains(inputs.platform, 'macos') && !contains(inputs.platform, 'arm') && !contains(inputs.target, 'aarch64') && '-DGGML_NATIVE=OFF -DGGML_AVX=OFF -DGGML_AVX2=OFF -DGGML_FMA=OFF -DGGML_F16C=OFF' || '' }}
         with:
           tagName: ${{ inputs.release-id && format('v{0}', steps.get-version.outputs.version) || '' }}
           releaseName: ${{ inputs.release-id && format('v{0}', steps.get-version.outputs.version) || '' }}

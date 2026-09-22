@@ -340,21 +340,22 @@ impl TranscribeCppEngine {
                 .max(0.5);
             let started = std::time::Instant::now();
             std::thread::spawn(move || {
+                let mut last_pct = -1;
                 while !done.load(Ordering::Relaxed) {
                     std::thread::sleep(Duration::from_millis(100));
                     if done.load(Ordering::Relaxed) {
                         break;
                     }
-                    let pct =
-                        (started.elapsed().as_secs_f64() / est_secs * 100.0).min(95.0) as i32;
-                    callback(TranscriptionProgress {
-                        text: None,
-                        progress: Some(pct.max(0)),
-                    });
-                    if pct >= 95 {
-                        // Hold at the cap until the run finishes instead of
-                        // churning the UI with identical values.
-                        std::thread::sleep(Duration::from_millis(400));
+                    let pct = (started.elapsed().as_secs_f64() / est_secs * 100.0).min(95.0) as i32;
+                    let pct = pct.max(0);
+                    // Skip duplicate values at the 95% cap instead of
+                    // sleeping extra: keeps join latency at ~100ms.
+                    if pct != last_pct {
+                        last_pct = pct;
+                        callback(TranscriptionProgress {
+                            text: None,
+                            progress: Some(pct),
+                        });
                     }
                 }
             })
@@ -365,9 +366,6 @@ impl TranscribeCppEngine {
         if let Some(handle) = ticker_handle {
             let _ = handle.join();
         }
-        // A cancelled run must not poison the next one: the flag is
-        // edge-triggered per run, so always clear it once the run ends.
-        self.cancel_token.reset();
         // A cancelled run must not poison the next one: the flag is
         // edge-triggered per run, so always clear it once the run ends.
         self.cancel_token.reset();
@@ -1028,6 +1026,7 @@ impl TranscriptionManager {
         // Perform transcription with the appropriate engine.
         // We use catch_unwind to prevent engine panics from poisoning the mutex,
         // which would make the app hang indefinitely on subsequent operations.
+        let whisper_took_prompt;
         let result = {
             let mut engine_guard = self.lock_engine();
 
@@ -1044,6 +1043,12 @@ impl TranscriptionManager {
             };
 
             // Release the lock before transcribing — no mutex held during the engine call
+            // Capture whether the whisper run carries the decode prompt while
+            // the engine is already owned, so no second lock is needed later.
+            whisper_took_prompt = matches!(
+                &engine,
+                LoadedEngine::Whisper(w) if w.takes_initial_prompt()
+            );
             drop(engine_guard);
 
             let transcribe_result = catch_unwind(AssertUnwindSafe(
@@ -1304,14 +1309,7 @@ impl TranscriptionManager {
             .get_model_info(&settings.selected_model)
             .map(|info| matches!(info.engine_type, EngineType::Whisper))
             .unwrap_or(false)
-            && self
-                .lock_engine()
-                .as_ref()
-                .map(|engine| match engine {
-                    LoadedEngine::Whisper(w) => w.takes_initial_prompt(),
-                    _ => false,
-                })
-                .unwrap_or(false);
+            && whisper_took_prompt;
 
         let corrected_result = if !settings.custom_words.is_empty() && !custom_words_prompted {
             apply_custom_words(
